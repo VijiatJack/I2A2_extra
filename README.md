@@ -14,9 +14,11 @@ A sophisticated multi-agent application that uses Google AI (Gemini) to parse CS
 - **🌍 Multilingual Support**: Full support for Portuguese (Brazil) and English
 - **📈 Data Visualization**: Interactive graphs and charts
 - **🔍 Fraud Detection**: Specialized analysis for fraud detection datasets
-- **📊 Initial Data Analysis**: Automatic statistical summaries and insights
+- **📊 Comprehensive Data Analysis**: Advanced statistical summaries and intelligent data sampling
 - **🎯 Contextual Validation**: Smart question validation in multiple languages
 - **💡 Technical Opinions**: Get expert assessments of your dataset quality
+- **🧠 Intelligent Data Sampling**: Smart sampling strategies for large datasets including head/tail, random, and stratified sampling
+- **📋 Data Quality Assessment**: Comprehensive analysis of missing values, duplicates, and data integrity
 
 ### Data Analysis Capabilities
 - **Statistical Analysis**: Mean, median, standard deviation, and distribution analysis
@@ -24,6 +26,9 @@ A sophisticated multi-agent application that uses Google AI (Gemini) to parse CS
 - **Time Series Analysis**: Temporal pattern recognition and trend analysis
 - **Data Quality Assessment**: Missing values, duplicates, and data structure evaluation
 - **Visual Analytics**: Multiple chart types including distributions and time series
+- **Intelligent Sampling**: Advanced sampling strategies for large datasets
+- **Pattern Recognition**: Correlation analysis and value distribution insights
+- **Chunked Processing**: Efficient handling of large datasets through intelligent chunking
 
 ## 🏗️ Project Structure
 
@@ -36,11 +41,25 @@ I2A2_extra/
 │   ├── csv_agent.py       # CSV processing agent
 │   ├── query_agent.py     # Query processing agent
 │   └── insight_agent.py   # Insight generation agent
+├── config/                # Configuration management
+│   ├── __init__.py
+│   └── settings.py        # Application settings and environment handling
+├── services/              # Business logic services
+│   ├── __init__.py
+│   ├── chart_service.py   # Chart generation and visualization
+│   ├── data_analysis_service.py  # Advanced data analysis and sampling
+│   ├── data_service.py    # Core data processing operations
+│   └── file_service.py    # File handling and validation
+├── utils/                 # Utility functions and constants
+│   ├── __init__.py
+│   ├── constants.py       # Application-wide constants
+│   └── validation.py      # Data validation utilities
 ├── app.py                 # Main Streamlit application
 ├── languages.py           # Multilingual support
 ├── requirements.txt       # Python dependencies
 ├── .env.example          # Environment variables template
 ├── .gitignore           # Git ignore rules
+├── EXAMPLE_CSV_FORMAT.md # CSV format documentation
 └── README.md            # This file
 ```
 
@@ -77,7 +96,7 @@ I2A2_extra/
    ```bash
    cp .env.example .env
    # Edit .env and add your Google AI API key:
-   # GOOGLE_API_KEY=your_google_api_key_here
+   # GEMINI_API_KEY=your_GEMINI_API_KEY_here
    ```
 
 5. **Run the application**
@@ -125,7 +144,7 @@ Create a `.env` file with the following variables:
 
 ```env
 # Required: Google AI API Key
-GOOGLE_API_KEY=your_google_api_key_here
+GEMINI_API_KEY=your_GEMINI_API_KEY_here
 
 # Optional: Suppress Google Cloud warnings (if desired)
 GRPC_VERBOSITY=ERROR
@@ -152,13 +171,32 @@ GRPC_TRACE=""
 
 ### Query Agent
 - **Role**: Processes natural language queries
-- **Responsibilities**: Query interpretation, AI model interaction
-- **Features**: Context-aware responses, multilingual support
+- **Responsibilities**: Query interpretation, AI model interaction using Gemini
+- **Features**: Context-aware responses, multilingual support, comprehensive data context provision
 
 ### Insight Agent
 - **Role**: Generates additional insights and analysis
-- **Responsibilities**: Pattern recognition, statistical analysis
-- **Features**: Automated insights, trend identification
+- **Responsibilities**: Pattern recognition, statistical analysis, comprehensive data insights
+- **Features**: Automated insights, trend identification, advanced data analysis integration
+
+## 🔧 Services Architecture
+
+### Data Analysis Service
+- **Purpose**: Provides comprehensive data analysis and intelligent sampling
+- **Features**: Statistical summaries, data quality assessment, pattern analysis, chunked processing
+- **Sampling Strategies**: Head/tail sampling, random sampling, stratified sampling
+
+### Chart Service
+- **Purpose**: Handles all data visualization and chart generation
+- **Features**: Multiple chart types, interactive visualizations, automatic chart saving
+
+### Data Service
+- **Purpose**: Core data processing and analysis operations
+- **Features**: Fraud detection, time series analysis, data validation
+
+### File Service
+- **Purpose**: File handling, validation, and processing
+- **Features**: CSV parsing, encoding detection, file validation
 
 ## 🌐 Multilingual Support
 
@@ -186,7 +224,7 @@ The application supports:
 
 ### Common Issues
 
-1. **"GOOGLE_API_KEY not found"**
+1. **"GEMINI_API_KEY not found"**
    - Ensure `.env` file exists with valid API key
    - Check API key permissions and quotas
 

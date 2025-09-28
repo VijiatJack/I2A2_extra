@@ -34,7 +34,6 @@ MANIFEST
 venv/
 ENV/
 env/
-.env/
 
 # IDE and editor files
 .vscode/
@@ -42,8 +41,6 @@ env/
 *.swp
 *.swo
 *~
-.DS_Store
-Thumbs.db
 
 # Streamlit cache
 .streamlit/
@@ -68,11 +65,6 @@ logs/
 
 # OS generated files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
 # Jupyter Notebook checkpoints
