@@ -53,7 +53,12 @@ LANGUAGES = {
         "fraud_distribution": "Distribuição de Fraudes vs Regulares",
         "amount_distribution": "Distribuição de Valores",
         "time_series": "Transações ao Longo do Tempo",
-        "related_questions_warning": "Por favor, faça perguntas relacionadas ao arquivo CSV importado e à detecção de fraudes."
+        "related_questions_warning": "Por favor, faça perguntas relacionadas ao arquivo CSV importado e à detecção de fraudes.",
+        "manual_chart_option": "Ou digite manualmente o tipo de gráfico desejado:",
+        "manual_chart_placeholder": "Ex: histograma da coluna Amount, gráfico de dispersão entre X e Y...",
+        "generate_custom_graph": "Gerar Gráfico Personalizado",
+        "custom_chart_validation_error": "Por favor, descreva o tipo de gráfico que você deseja gerar.",
+        "chart_generation_options": "Opções de Geração de Gráficos"
     },
     "en_US": {
         "app_title": "CSV AI Parser",
@@ -105,7 +110,12 @@ LANGUAGES = {
         "fraud_distribution": "Fraud vs Regular Distribution",
         "amount_distribution": "Amount Distribution",
         "time_series": "Transactions Over Time",
-        "related_questions_warning": "Please ask questions related to the imported CSV file and fraud detection."
+        "related_questions_warning": "Please ask questions related to the imported CSV file and fraud detection.",
+        "manual_chart_option": "Or manually enter the desired chart type:",
+        "manual_chart_placeholder": "Ex: histogram of Amount column, scatter plot between X and Y...",
+        "generate_custom_graph": "Generate Custom Graph",
+        "custom_chart_validation_error": "Please describe the type of chart you want to generate.",
+        "chart_generation_options": "Chart Generation Options"
     }
 }
 

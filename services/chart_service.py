@@ -575,6 +575,173 @@ class ChartService:
         
         return self._save_and_return_path()
     
+    def generate_custom_chart(self, data: pd.DataFrame, user_description: str, language: str = 'en_US') -> str:
+        """
+        Generate a custom chart based on user's natural language description.
+        
+        Args:
+            data (pd.DataFrame): Data to visualize
+            user_description (str): Natural language description of desired chart
+            language (str): Language for chart labels and AI interaction
+            
+        Returns:
+            str: Path to the generated chart image
+            
+        Raises:
+            ValueError: If description is invalid or chart cannot be generated
+        """
+        if data is None or data.empty:
+            raise ValueError("Data cannot be None or empty")
+        
+        if not user_description or not user_description.strip():
+            raise ValueError("Chart description cannot be empty")
+        
+        # Get AI interpretation of the user's request
+        chart_config = self._interpret_custom_chart_request(data, user_description, language)
+        
+        if not chart_config:
+            raise ValueError("Could not interpret chart request")
+        
+        # Generate the chart based on AI interpretation
+        return self._generate_enhanced_chart(data, chart_config['type'], chart_config, language)
+    
+    def _interpret_custom_chart_request(self, data: pd.DataFrame, user_description: str, language: str) -> Dict:
+        """
+        Use AI to interpret user's natural language chart request.
+        
+        Args:
+            data (pd.DataFrame): Available data
+            user_description (str): User's chart description
+            language (str): Language for AI interaction
+            
+        Returns:
+            Dict: Chart configuration with type, columns, and parameters
+        """
+        try:
+            # Analyze data structure
+            data_info = self._analyze_data_structure(data)
+            
+            # Create prompt for AI interpretation
+            if language == 'pt_BR':
+                prompt = f"""
+                Analise a seguinte solicitação de gráfico do usuário e os dados disponíveis.
+                
+                DADOS DISPONÍVEIS:
+                {data_info}
+                
+                SOLICITAÇÃO DO USUÁRIO:
+                "{user_description}"
+                
+                Por favor, interprete a solicitação e retorne APENAS um JSON válido com a seguinte estrutura:
+                {{
+                    "type": "histogram|scatter|line|bar|pie|box|heatmap",
+                    "x_column": "nome_da_coluna_x",
+                    "y_column": "nome_da_coluna_y",
+                    "title": "Título do gráfico (máximo 6 palavras)",
+                    "description": "Breve descrição do gráfico"
+                }}
+                
+                REGRAS:
+                - Use apenas colunas que existem nos dados
+                - Para histograma: apenas x_column é necessário
+                - Para gráfico de pizza: apenas x_column (categórica) é necessário
+                - Para scatter/line: x_column e y_column são necessários
+                - Para bar: x_column (categórica) e opcionalmente y_column
+                - Para box: x_column (numérica) é necessário
+                - Para heatmap: use correlações entre colunas numéricas
+                """
+            else:
+                prompt = f"""
+                Analyze the following user chart request and available data.
+                
+                AVAILABLE DATA:
+                {data_info}
+                
+                USER REQUEST:
+                "{user_description}"
+                
+                Please interpret the request and return ONLY a valid JSON with this structure:
+                {{
+                    "type": "histogram|scatter|line|bar|pie|box|heatmap",
+                    "x_column": "x_column_name",
+                    "y_column": "y_column_name",
+                    "title": "Chart title (max 6 words)",
+                    "description": "Brief chart description"
+                }}
+                
+                RULES:
+                - Use only columns that exist in the data
+                - For histogram: only x_column is needed
+                - For pie chart: only x_column (categorical) is needed
+                - For scatter/line: both x_column and y_column are needed
+                - For bar: x_column (categorical) and optionally y_column
+                - For box: x_column (numerical) is needed
+                - For heatmap: use correlations between numerical columns
+                """
+            
+            response = self.model.generate_content(prompt)
+            response_text = response.text.strip()
+            
+            # Clean and parse JSON response
+            if '```json' in response_text:
+                response_text = response_text.split('```json')[1].split('```')[0].strip()
+            elif '```' in response_text:
+                response_text = response_text.split('```')[1].strip()
+            
+            import json
+            chart_config = json.loads(response_text)
+            
+            # Validate the configuration
+            if not self._validate_chart_config(chart_config, data):
+                return None
+            
+            return chart_config
+            
+        except Exception as e:
+            print(f"Error interpreting custom chart request: {e}")
+            return None
+    
+    def _validate_chart_config(self, config: Dict, data: pd.DataFrame) -> bool:
+        """
+        Validate that the chart configuration is valid for the given data.
+        
+        Args:
+            config (Dict): Chart configuration
+            data (pd.DataFrame): Available data
+            
+        Returns:
+            bool: True if configuration is valid
+        """
+        try:
+            # Check required fields
+            if 'type' not in config:
+                return False
+            
+            chart_type = config['type']
+            if chart_type not in ['histogram', 'scatter', 'line', 'bar', 'pie', 'box', 'heatmap']:
+                return False
+            
+            # Check column existence
+            if 'x_column' in config and config['x_column']:
+                if config['x_column'] not in data.columns:
+                    return False
+            
+            if 'y_column' in config and config['y_column']:
+                if config['y_column'] not in data.columns:
+                    return False
+            
+            # Type-specific validation
+            if chart_type in ['scatter', 'line'] and not (config.get('x_column') and config.get('y_column')):
+                return False
+            
+            if chart_type in ['histogram', 'pie', 'box'] and not config.get('x_column'):
+                return False
+            
+            return True
+            
+        except Exception:
+            return False
+    
     def _generate_scatter(self, data: pd.DataFrame, config: Dict, language: str) -> str:
         """Generate a scatter plot."""
         plt.figure(figsize=(10, 6))

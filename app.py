@@ -142,6 +142,9 @@ if uploaded_file is not None:
         # Visualization section
         st.subheader(lang.get("visualization", "Visualization"))
         
+        # Chart generation options
+        st.write(lang.get("chart_generation_options", "Chart Generation Options"))
+        
         # Get AI-suggested charts (cache in session state to avoid re-fetching)
         if 'suggested_charts' not in st.session_state or st.session_state.suggested_charts is None:
             with st.spinner(lang.get("analyzing_data", "Analyzing data for chart suggestions...")):
@@ -149,31 +152,57 @@ if uploaded_file is not None:
         
         suggested_charts = st.session_state.suggested_charts
         
-        if suggested_charts:
-            selected_graph = st.selectbox(
-                lang.get("select_graph", "Select a graph to display:"), 
-                list(suggested_charts.keys()), 
-                format_func=lambda x: suggested_charts[x]
-            )
-        else:
-            # Fallback to default options if AI suggestions fail
-            graph_options = {
-                "fraud_distribution": lang.get("fraud_distribution", "Fraud vs Regular Distribution"),
-                "amount_distribution": lang.get("amount_distribution", "Amount Distribution"),
-                "time_series": lang.get("time_series", "Transactions Over Time")
-            }
-            selected_graph = st.selectbox(lang.get("select_graph", "Select a graph to display:"), 
-                                         list(graph_options.keys()), 
-                                         format_func=lambda x: graph_options[x])
+        # Create tabs for different chart generation methods
+        tab1, tab2 = st.tabs(["📊 " + lang.get("select_graph", "Select a graph"), "✏️ " + lang.get("manual_chart_option", "Manual Input")])
         
-        if st.button(lang.get("generate_graph", "Generate Graph")):
-            with st.spinner(lang.get("generating_graph", "Generating graph...")):
-                try:
-                    graph_path = chart_service.generate_graph(st.session_state.data, selected_graph, st.session_state.language)
-                    st.image(graph_path)
-                except Exception as e:
-                    st.error(f"Error generating graph: {str(e)}")
-                    st.info(lang.get("graph_error_info", "Please try a different chart type or check your data format."))
+        with tab1:
+            if suggested_charts:
+                selected_graph = st.selectbox(
+                    lang.get("select_graph", "Select a graph to display:"), 
+                    list(suggested_charts.keys()), 
+                    format_func=lambda x: suggested_charts[x],
+                    key="ai_suggested_chart"
+                )
+            else:
+                # Fallback to default options if AI suggestions fail
+                graph_options = {
+                    "fraud_distribution": lang.get("fraud_distribution", "Fraud vs Regular Distribution"),
+                    "amount_distribution": lang.get("amount_distribution", "Amount Distribution"),
+                    "time_series": lang.get("time_series", "Transactions Over Time")
+                }
+                selected_graph = st.selectbox(lang.get("select_graph", "Select a graph to display:"), 
+                                             list(graph_options.keys()), 
+                                             format_func=lambda x: graph_options[x],
+                                             key="fallback_chart")
+            
+            if st.button(lang.get("generate_graph", "Generate Graph"), key="generate_ai_chart"):
+                with st.spinner(lang.get("generating_graph", "Generating graph...")):
+                    try:
+                        graph_path = chart_service.generate_graph(st.session_state.data, selected_graph, st.session_state.language)
+                        st.image(graph_path)
+                    except Exception as e:
+                        st.error(f"Error generating graph: {str(e)}")
+                        st.info(lang.get("graph_error_info", "Please try a different chart type or check your data format."))
+        
+        with tab2:
+            manual_chart_input = st.text_area(
+                lang.get("manual_chart_option", "Or manually enter the desired chart type:"),
+                placeholder=lang.get("manual_chart_placeholder", "Ex: histogram of Amount column, scatter plot between X and Y..."),
+                height=100,
+                key="manual_chart_input"
+            )
+            
+            if st.button(lang.get("generate_custom_graph", "Generate Custom Graph"), key="generate_custom_chart"):
+                if not manual_chart_input.strip():
+                    st.error(lang.get("custom_chart_validation_error", "Please describe the type of chart you want to generate."))
+                else:
+                    with st.spinner(lang.get("generating_graph", "Generating graph...")):
+                        try:
+                            graph_path = chart_service.generate_custom_chart(st.session_state.data, manual_chart_input, st.session_state.language)
+                            st.image(graph_path)
+                        except Exception as e:
+                            st.error(f"Error generating custom graph: {str(e)}")
+                            st.info(lang.get("graph_error_info", "Please try a different chart type or check your data format."))
         
         # User query section
         st.subheader(lang["ask_questions"])
