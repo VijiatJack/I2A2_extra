@@ -90,7 +90,7 @@ class FileService:
     
     def _read_csv_file(self, uploaded_file) -> pd.DataFrame:
         """
-        Read CSV file with various encoding attempts.
+        Read CSV file with various encoding attempts and automatic delimiter detection.
         
         Args:
             uploaded_file: Streamlit uploaded file object
@@ -99,27 +99,33 @@ class FileService:
             pd.DataFrame: Loaded DataFrame
             
         Raises:
-            Exception: If file cannot be read with any encoding
+            Exception: If file cannot be read with any encoding or delimiter
         """
         # Reset file pointer
         uploaded_file.seek(0)
         
-        # Try different encodings
+        # Try different encodings and delimiters
         encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252']
+        delimiters = [',', '|', ';', '\t']  # Support comma, pipe, semicolon, and tab
         
         for encoding in encodings:
-            try:
-                uploaded_file.seek(0)
-                df = pd.read_csv(uploaded_file, encoding=encoding)
-                return df
-            except UnicodeDecodeError:
-                continue
-            except Exception as e:
-                if encoding == encodings[-1]:  # Last encoding attempt
-                    raise e
-                continue
+            for delimiter in delimiters:
+                try:
+                    uploaded_file.seek(0)
+                    df = pd.read_csv(uploaded_file, encoding=encoding, sep=delimiter)
+                    
+                    # Validate that we got meaningful data (more than 1 column)
+                    if len(df.columns) > 1:
+                        return df
+                        
+                except (UnicodeDecodeError, pd.errors.EmptyDataError, pd.errors.ParserError):
+                    continue
+                except Exception as e:
+                    if encoding == encodings[-1] and delimiter == delimiters[-1]:  # Last attempt
+                        raise e
+                    continue
         
-        raise Exception("Could not read file with any supported encoding")
+        raise Exception("Could not read file with any supported encoding or delimiter (comma, pipe, semicolon, tab)")
     
     def _validate_dataframe(self, df: pd.DataFrame) -> Optional[str]:
         """

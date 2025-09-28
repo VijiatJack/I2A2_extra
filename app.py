@@ -23,8 +23,8 @@ if not os.getenv("GEMINI_API_KEY"):
 
 # Set page configuration
 st.set_page_config(
-    page_title="CSV AI Parser",
-    page_icon="📊",
+    page_title="DataVision AI - Análise Inteligente de Dados",
+    page_icon="🔮",
     layout="wide"
 )
 
@@ -45,6 +45,8 @@ if 'file_processed' not in st.session_state:
     st.session_state.file_processed = False
 if 'analysis_results' not in st.session_state:
     st.session_state.analysis_results = None
+if 'suggested_charts' not in st.session_state:
+    st.session_state.suggested_charts = None
 
 # Create a sidebar for settings
 with st.sidebar:
@@ -55,11 +57,13 @@ with st.sidebar:
         index=0 if st.session_state.language == "pt_BR" else 1
     )
     
-    # Update language in session state
+    # Handle language changes - reset chart suggestions when language changes
     if selected_language == "Português (Brasil)" and st.session_state.language != "pt_BR":
         st.session_state.language = "pt_BR"
+        st.session_state.suggested_charts = None  # Reset charts for new language
     elif selected_language == "English (US)" and st.session_state.language != "en_US":
         st.session_state.language = "en_US"
+        st.session_state.suggested_charts = None  # Reset charts for new language
 
 # Get current language dictionary
 lang = LANGUAGES[st.session_state.language]
@@ -108,10 +112,15 @@ if uploaded_file is not None:
             st.session_state.file_processed = True
             st.session_state.current_file_name = uploaded_file.name
             
-            # Generate initial analysis
+            # Reset chart suggestions for new file
+            st.session_state.suggested_charts = None
+            
+            # Generate AI-powered initial analysis using Insight Agent
             with st.spinner(lang.get("generating_analysis", "Generating initial analysis...")):
-                analysis_results = data_service.analyze_data(data_preview)
-                st.session_state.analysis_results = analysis_results
+                from agents.insight_agent import InsightAgent
+                insight_agent = InsightAgent()
+                ai_analysis = insight_agent.process(data_preview, operation='initial_analysis', language=st.session_state.language)
+                st.session_state.analysis_results = {'ai_insights': ai_analysis}
     
     # If file is processed successfully, display analysis and allow queries
     if st.session_state.file_processed and st.session_state.data is not None:
@@ -119,77 +128,52 @@ if uploaded_file is not None:
         st.subheader(lang["data_preview"])
         st.dataframe(st.session_state.data.head())
         
-        # Display initial analysis
+        # Display AI-powered initial analysis
         if st.session_state.analysis_results:
-            analysis = st.session_state.analysis_results
-            
             st.subheader(lang.get("initial_analysis", "Initial Analysis"))
             
-            # Records analysis
-            st.write(f"### {lang.get('records_analysis', 'Records Analysis')}")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric(lang.get("total_records", "Total Records"), f"{analysis['records']['total']:,}")
-            with col2:
-                st.metric(lang.get("regular_transactions", "Regular Transactions"), 
-                            f"{analysis['records']['regular']:,} ({analysis['records']['regular_percentage']:.2f}%)")
-            with col3:
-                st.metric(lang.get("fraudulent_transactions", "Fraudulent Transactions"), 
-                            f"{analysis['records']['fraudulent']:,} ({analysis['records']['fraud_percentage']:.2f}%)")
-            
-            # Time analysis
-            st.write(f"### {lang.get('time_analysis', 'Time Analysis')}")
-            st.metric(lang.get("total_time_period", "Total Time Period"), 
-                        f"{analysis['time']['total_days']:.2f} days ({analysis['time']['total_hours']:.2f} hours)")
-            
-            # Amount analysis
-            st.write(f"### {lang.get('amount_analysis', 'Amount Analysis')}")
-            
-            # Regular transactions
-            st.write(f"#### {lang.get('regular_transactions_heading', 'Regular Transactions')}")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric(lang.get("min_amount", "Minimum Amount"), f"${analysis['amounts']['regular_min']:.2f}")
-            with col2:
-                st.metric(lang.get("max_amount", "Maximum Amount"), f"${analysis['amounts']['regular_max']:.2f}")
-            with col3:
-                st.metric(lang.get("avg_amount", "Average Amount"), f"${analysis['amounts']['regular_avg']:.2f}")
-            
-            # Fraudulent transactions
-            st.write(f"#### {lang.get('fraudulent_transactions_heading', 'Fraudulent Transactions')}")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric(lang.get("min_amount", "Minimum Amount"), f"${analysis['amounts']['fraud_min']:.2f}")
-            with col2:
-                st.metric(lang.get("max_amount", "Maximum Amount"), f"${analysis['amounts']['fraud_max']:.2f}")
-            with col3:
-                st.metric(lang.get("avg_amount", "Average Amount"), f"${analysis['amounts']['fraud_avg']:.2f}")
-            
-            # Total amounts
-            st.write(f"#### {lang.get('total_amounts', 'Total Amounts')}")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric(lang.get("regular_total", "Regular Total"), 
-                            f"${analysis['amounts']['regular_total']:.2f} ({analysis['amounts']['regular_percentage']:.2f}%)")
-            with col2:
-                st.metric(lang.get("fraudulent_total", "Fraudulent Total"), 
-                            f"${analysis['amounts']['fraud_total']:.2f} ({analysis['amounts']['fraud_percentage']:.2f}%)")
+            # Display AI-generated insights
+            ai_insights = st.session_state.analysis_results.get('ai_insights', '')
+            if ai_insights:
+                st.write(ai_insights)
+            else:
+                st.info("No analysis available yet.")
         
-        # Graph options
+        # Visualization section
         st.subheader(lang.get("visualization", "Visualization"))
-        graph_options = {
-            "fraud_distribution": lang.get("fraud_distribution", "Fraud vs Regular Distribution"),
-            "amount_distribution": lang.get("amount_distribution", "Amount Distribution"),
-            "time_series": lang.get("time_series", "Transactions Over Time")
-        }
-        selected_graph = st.selectbox(lang.get("select_graph", "Select a graph to display:"), 
-                                     list(graph_options.keys()), 
-                                     format_func=lambda x: graph_options[x])
+        
+        # Get AI-suggested charts (cache in session state to avoid re-fetching)
+        if 'suggested_charts' not in st.session_state or st.session_state.suggested_charts is None:
+            with st.spinner(lang.get("analyzing_data", "Analyzing data for chart suggestions...")):
+                st.session_state.suggested_charts = chart_service.get_ai_suggested_charts(st.session_state.data, st.session_state.language)
+        
+        suggested_charts = st.session_state.suggested_charts
+        
+        if suggested_charts:
+            selected_graph = st.selectbox(
+                lang.get("select_graph", "Select a graph to display:"), 
+                list(suggested_charts.keys()), 
+                format_func=lambda x: suggested_charts[x]
+            )
+        else:
+            # Fallback to default options if AI suggestions fail
+            graph_options = {
+                "fraud_distribution": lang.get("fraud_distribution", "Fraud vs Regular Distribution"),
+                "amount_distribution": lang.get("amount_distribution", "Amount Distribution"),
+                "time_series": lang.get("time_series", "Transactions Over Time")
+            }
+            selected_graph = st.selectbox(lang.get("select_graph", "Select a graph to display:"), 
+                                         list(graph_options.keys()), 
+                                         format_func=lambda x: graph_options[x])
         
         if st.button(lang.get("generate_graph", "Generate Graph")):
             with st.spinner(lang.get("generating_graph", "Generating graph...")):
-                graph_path = chart_service.generate_graph(st.session_state.data, selected_graph)
-                st.image(graph_path)
+                try:
+                    graph_path = chart_service.generate_graph(st.session_state.data, selected_graph, st.session_state.language)
+                    st.image(graph_path)
+                except Exception as e:
+                    st.error(f"Error generating graph: {str(e)}")
+                    st.info(lang.get("graph_error_info", "Please try a different chart type or check your data format."))
         
         # User query section
         st.subheader(lang["ask_questions"])

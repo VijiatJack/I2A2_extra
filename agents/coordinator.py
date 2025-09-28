@@ -62,6 +62,9 @@ class CoordinatorAgent:
         else:
             return "Please upload a CSV file first.", None
         
+        # Get current language from session state
+        current_language = getattr(st.session_state, 'language', 'en_US')
+        
         # Check if this is a general opinion request about the file
         opinion_keywords = [
             # Portuguese
@@ -80,10 +83,10 @@ class CoordinatorAgent:
             insights = None
         else:
             # Process the query using the query agent
-            response = self.query_agent.process(data_to_use, query=query)
+            response = self.query_agent.process(data_to_use, query=query, language=current_language)
             
             # Generate additional insights based on the query
-            insights = self.insight_agent.process(data_to_use, query=query, operation="query_analysis")
+            insights = self.insight_agent.process(data_to_use, query=query, operation="query_analysis", language=current_language)
         
         return response, insights
     

@@ -7,13 +7,11 @@ class CSVAgent(BaseAgent):
     def __init__(self):
         """Initialize the CSV agent."""
         super().__init__()
-        # Define expected column structure
-        self.expected_columns = 31
-        self.expected_headers = ['Time'] + [f'V{i}' for i in range(1, 29)] + ['Amount', 'Class']
     
     def validate_csv_structure(self, df):
         """
-        Validate that the CSV file has the expected structure.
+        Validate that the CSV file has a basic valid structure.
+        Now supports any CSV format, not just fraud detection datasets.
         
         Args:
             df: The DataFrame to validate
@@ -21,33 +19,28 @@ class CSVAgent(BaseAgent):
         Returns:
             tuple: (is_valid, error_message)
         """
-        # Check number of columns
-        if len(df.columns) != self.expected_columns:
-            return False, f"Invalid file: Expected {self.expected_columns} columns, but found {len(df.columns)}."
+        # Basic validation - ensure we have data
+        if df.empty:
+            return False, "Invalid file: CSV file is empty."
         
-        # Check column headers
-        for i, expected_header in enumerate(self.expected_headers):
-            if df.columns[i] != expected_header:
-                return False, f"Invalid file: Expected column {i+1} to be '{expected_header}', but found '{df.columns[i]}'."
+        # Ensure we have at least one column
+        if len(df.columns) == 0:
+            return False, "Invalid file: CSV file has no columns."
         
-        # Validate data types and content
-        # Check if Time column contains numeric values
-        if not pd.api.types.is_numeric_dtype(df['Time']):
-            return False, "Invalid file: 'Time' column must contain numeric values."
+        # Ensure we have at least one row of data
+        if len(df) == 0:
+            return False, "Invalid file: CSV file has no data rows."
         
-        # Check if Class column contains only 0 and 1
-        if not set(df['Class'].unique()).issubset({0, 1}):
-            return False, "Invalid file: 'Class' column must contain only 0 and 1 values."
-        
-        # Check if Amount column contains numeric values
-        if not pd.api.types.is_numeric_dtype(df['Amount']):
-            return False, "Invalid file: 'Amount' column must contain numeric values."
+        # Check for completely empty columns
+        empty_columns = df.columns[df.isnull().all()].tolist()
+        if empty_columns:
+            return False, f"Invalid file: Columns {empty_columns} are completely empty."
         
         return True, ""
     
     def process(self, file, **kwargs):
         """
-        Process a CSV file.
+        Process a CSV file with generic support for any CSV format.
         
         Args:
             file: The CSV file to process
@@ -57,10 +50,11 @@ class CSVAgent(BaseAgent):
             DataFrame or str: The processed data or error message
         """
         try:
-            # Read the CSV file
+            # Read the CSV file with automatic delimiter detection
+            # This is now handled by the FileService
             df = pd.read_csv(file)
             
-            # Validate CSV structure
+            # Validate CSV structure (now generic)
             is_valid, error_message = self.validate_csv_structure(df)
             if not is_valid:
                 return error_message
@@ -69,10 +63,18 @@ class CSVAgent(BaseAgent):
             # Remove duplicate rows
             df = df.drop_duplicates()
             
-            # Handle missing values (fill numeric with 0)
+            # Handle missing values more intelligently
             for col in df.columns:
                 if pd.api.types.is_numeric_dtype(df[col]):
-                    df[col] = df[col].fillna(0)
+                    # For numeric columns, fill with median instead of 0
+                    df[col] = df[col].fillna(df[col].median())
+                else:
+                    # For non-numeric columns, fill with mode or 'Unknown'
+                    mode_value = df[col].mode()
+                    if len(mode_value) > 0:
+                        df[col] = df[col].fillna(mode_value[0])
+                    else:
+                        df[col] = df[col].fillna('Unknown')
             
             return df
             

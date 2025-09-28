@@ -3,10 +3,11 @@
 # Available languages
 LANGUAGES = {
     "pt_BR": {
-        "app_title": "Analisador de CSV com IA",
+        "app_title": "🔮 DataVision AI - Análise Inteligente de Dados",
         "app_description": """
-        Esta aplicação usa IA para analisar arquivos CSV e responder perguntas sobre os dados.
-        Faça upload de um arquivo CSV e faça perguntas para obter insights dos seus dados.
+        **DataVision AI** é sua plataforma inteligente para análise avançada de dados CSV.
+        Transforme seus dados em insights valiosos com o poder da Inteligência Artificial.
+        Faça upload de um arquivo CSV e descubra padrões ocultos nos seus dados.
         """,
         "language_selector": "Idioma",
         "file_uploader": "Escolha um arquivo CSV",
@@ -24,9 +25,11 @@ LANGUAGES = {
         "response": "Resposta",
         "additional_insights": "Insights Adicionais",
         "upload_prompt": "Por favor, faça upload de um arquivo CSV para começar.",
-        "footer": "Desenvolvido com Google AI e Streamlit",
+        "footer": "Desenvolvido com Google AI e Streamlit | 🔮 DataVision AI",
         "api_key_error": "Por favor, configure sua GEMINI_API_KEY em um arquivo .env",
         "generating_analysis": "Gerando análise inicial... Por favor, aguarde.",
+        "analyzing_data": "Analisando dados para sugestões de gráficos...",
+        "graph_error_info": "Por favor, tente um tipo de gráfico diferente ou verifique o formato dos seus dados.",
         "initial_analysis": "Análise Inicial",
         "records_analysis": "Análise de Registros",
         "total_records": "Total de Registros",
@@ -77,6 +80,8 @@ LANGUAGES = {
         "footer": "Powered by Google AI and Streamlit",
         "api_key_error": "Please set your GEMINI_API_KEY in a .env file",
         "generating_analysis": "Generating initial analysis... Please wait.",
+        "analyzing_data": "Analyzing data for chart suggestions...",
+        "graph_error_info": "Please try a different chart type or check your data format.",
         "initial_analysis": "Initial Analysis",
         "records_analysis": "Records Analysis",
         "total_records": "Total Records",

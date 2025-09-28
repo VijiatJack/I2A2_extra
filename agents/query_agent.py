@@ -21,29 +21,43 @@ class QueryAgent(BaseAgent):
         
         Args:
             data: The DataFrame containing the CSV data
-            **kwargs: Additional arguments including the user query
+            **kwargs: Additional arguments including the user query and language
             
         Returns:
             str: The response to the query
         """
         query = kwargs.get('query', '')
+        language = kwargs.get('language', 'en_US')
+        
         if not query:
             return "Please provide a query."
         
         # Get data information
         data_info = self._get_data_info(data)
         
-        # Construct prompt for Google AI
-        prompt = f"""
-        I have a CSV dataset with the following information:
-        
-        {data_info}
-        
-        Based on this dataset, please answer the following question:
-        {query}
-        
-        Provide a clear and concise answer based only on the data provided.
-        """
+        # Construct prompt for Google AI based on language
+        if language == 'pt_BR':
+            prompt = f"""
+            Tenho um conjunto de dados CSV com as seguintes informações:
+            
+            {data_info}
+            
+            Com base neste conjunto de dados, por favor responda à seguinte pergunta:
+            {query}
+            
+            Forneça uma resposta clara e concisa baseada apenas nos dados fornecidos. Responda em português.
+            """
+        else:
+            prompt = f"""
+            I have a CSV dataset with the following information:
+            
+            {data_info}
+            
+            Based on this dataset, please answer the following question:
+            {query}
+            
+            Provide a clear and concise answer based only on the data provided.
+            """
         
         # Generate response using Google AI
         response = self.model.generate_content(prompt)
