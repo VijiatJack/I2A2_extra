@@ -1,19 +1,19 @@
-# CSV AI Parser 📊
+# 🔮 DataVision AI - Análise Inteligente de Dados
 
-A sophisticated multi-agent application that uses Google AI (Gemini) to parse CSV files and provide intelligent data analysis with natural language queries. Features advanced fraud detection capabilities, multilingual support, and comprehensive data visualization.
+A sophisticated multi-agent application that uses Google AI (Gemini) to parse CSV files and provide intelligent data analysis with natural language queries. Features advanced data analysis capabilities, multilingual support, and comprehensive data visualization for any type of dataset.
 
 ## ✨ Features
 
 ### Core Functionality
-- **Smart CSV Processing**: Upload and automatically analyze CSV files
+- **Smart CSV Processing**: Upload and automatically analyze any CSV file
 - **Natural Language Queries**: Ask questions about your data in plain language
-- **AI-Powered Insights**: Get intelligent analysis and recommendations
+- **AI-Powered Insights**: Get intelligent analysis and recommendations for any dataset
 - **Multi-Agent Architecture**: Specialized agents for different processing tasks
 
 ### Advanced Features
 - **🌍 Multilingual Support**: Full support for Portuguese (Brazil) and English
-- **📈 Data Visualization**: Interactive graphs and charts
-- **🔍 Fraud Detection**: Specialized analysis for fraud detection datasets
+- **📈 Data Visualization**: Interactive graphs and charts with AI-suggested visualizations
+- **🔍 Pattern Recognition**: Advanced analysis for any type of data patterns
 - **📊 Comprehensive Data Analysis**: Advanced statistical summaries and intelligent data sampling
 - **🎯 Contextual Validation**: Smart question validation in multiple languages
 - **💡 Technical Opinions**: Get expert assessments of your dataset quality
@@ -22,10 +22,10 @@ A sophisticated multi-agent application that uses Google AI (Gemini) to parse CS
 
 ### Data Analysis Capabilities
 - **Statistical Analysis**: Mean, median, standard deviation, and distribution analysis
-- **Fraud Detection**: Specialized metrics for fraud vs. regular transaction analysis
-- **Time Series Analysis**: Temporal pattern recognition and trend analysis
+- **Universal Data Processing**: Analyze any type of CSV data - sales, marketing, scientific, financial, etc.
+- **Time Series Analysis**: Temporal pattern recognition and trend analysis for any time-based data
 - **Data Quality Assessment**: Missing values, duplicates, and data structure evaluation
-- **Visual Analytics**: Multiple chart types including distributions and time series
+- **Visual Analytics**: Multiple chart types including histograms, scatter plots, line charts, bar charts, pie charts, box plots, and heatmaps
 - **Intelligent Sampling**: Advanced sampling strategies for large datasets
 - **Pattern Recognition**: Correlation analysis and value distribution insights
 - **Chunked Processing**: Efficient handling of large datasets through intelligent chunking
@@ -46,7 +46,7 @@ I2A2_extra/
 │   └── settings.py        # Application settings and environment handling
 ├── services/              # Business logic services
 │   ├── __init__.py
-│   ├── chart_service.py   # Chart generation and visualization
+│   ├── chart_service.py   # Chart generation and AI-powered visualization
 │   ├── data_analysis_service.py  # Advanced data analysis and sampling
 │   ├── data_service.py    # Core data processing operations
 │   └── file_service.py    # File handling and validation
@@ -110,9 +110,9 @@ I2A2_extra/
 
 ### Basic Usage
 1. **Select Language**: Choose between Portuguese (Brazil) or English in the sidebar
-2. **Upload CSV File**: Use the file uploader to select your CSV file
+2. **Upload CSV File**: Use the file uploader to select any CSV file
 3. **Review Analysis**: View automatic statistical analysis and data preview
-4. **Explore Visualizations**: Generate various charts and graphs
+4. **Explore AI Visualizations**: Generate AI-suggested charts and graphs tailored to your data
 5. **Ask Questions**: Enter natural language questions about your data
 6. **Get Insights**: Receive AI-powered responses and additional insights
 
@@ -122,20 +122,25 @@ I2A2_extra/
 - "What are the data types?" / "Quais são os tipos de dados?"
 - "Show me the distribution of variables" / "Mostre a distribuição das variáveis"
 - "What are the basic statistics?" / "Quais são as estatísticas básicas?"
+- "Describe the structure of this data" / "Descreva a estrutura destes dados"
 
 #### Pattern Analysis
 - "Are there any temporal patterns?" / "Existem padrões temporais?"
 - "Show me clustering in the data" / "Mostre agrupamentos nos dados"
 - "What trends can you identify?" / "Que tendências você identifica?"
+- "Find correlations between variables" / "Encontre correlações entre variáveis"
 
 #### Anomaly Detection
 - "Find outliers in the data" / "Encontre outliers nos dados"
-- "Are there suspicious transactions?" / "Há transações suspeitas?"
+- "Are there unusual values?" / "Há valores incomuns?"
 - "Identify irregular patterns" / "Identifique padrões irregulares"
+- "What data points seem anomalous?" / "Que pontos de dados parecem anômalos?"
 
-#### General Opinions
+#### General Analysis
 - "What's your opinion on this dataset?" / "Qual sua opinião sobre este dataset?"
 - "How would you evaluate data quality?" / "Como você avalia a qualidade dos dados?"
+- "What insights can you provide?" / "Que insights você pode fornecer?"
+- "Summarize the key findings" / "Resuma as principais descobertas"
 
 ## 🔧 Configuration
 
@@ -155,19 +160,20 @@ GRPC_TRACE=""
 - **Format**: Standard CSV with headers
 - **Encoding**: UTF-8 recommended
 - **Size**: No strict limit, but larger files may take longer to process
-- **Fraud Detection**: For fraud analysis, include a column named 'Class', 'fraud', or 'is_fraud'
+- **Data Types**: Supports any type of data - numerical, categorical, text, dates, etc.
+- **Use Cases**: Sales data, marketing analytics, scientific datasets, financial records, survey responses, etc.
 
 ## 🤖 Agent System Architecture
 
 ### Coordinator Agent
 - **Role**: Orchestrates the entire workflow
 - **Responsibilities**: File processing coordination, query routing, session management
-- **Features**: Smart data caching, technical opinion generation
+- **Features**: Smart data caching, technical opinion generation, universal data handling
 
 ### CSV Agent
 - **Role**: Handles CSV file processing and validation
 - **Responsibilities**: File parsing, data cleaning, format validation
-- **Features**: Error handling, data type inference
+- **Features**: Error handling, data type inference, universal CSV support
 
 ### Query Agent
 - **Role**: Processes natural language queries
@@ -181,22 +187,23 @@ GRPC_TRACE=""
 
 ## 🔧 Services Architecture
 
+### Chart Service
+- **Purpose**: Handles all data visualization and AI-powered chart generation
+- **Features**: 7+ chart types (histogram, scatter, line, bar, pie, box, heatmap), AI-suggested visualizations, automatic chart selection based on data types
+- **AI Integration**: Intelligent chart recommendations based on data structure and content
+
 ### Data Analysis Service
 - **Purpose**: Provides comprehensive data analysis and intelligent sampling
 - **Features**: Statistical summaries, data quality assessment, pattern analysis, chunked processing
 - **Sampling Strategies**: Head/tail sampling, random sampling, stratified sampling
 
-### Chart Service
-- **Purpose**: Handles all data visualization and chart generation
-- **Features**: Multiple chart types, interactive visualizations, automatic chart saving
-
 ### Data Service
 - **Purpose**: Core data processing and analysis operations
-- **Features**: Fraud detection, time series analysis, data validation
+- **Features**: Universal data analysis, time series analysis, data validation, pattern recognition
 
 ### File Service
 - **Purpose**: File handling, validation, and processing
-- **Features**: CSV parsing, encoding detection, file validation
+- **Features**: CSV parsing, encoding detection, file validation, universal format support
 
 ## 🌐 Multilingual Support
 
@@ -205,13 +212,24 @@ The application supports:
 - **English (US)**: Complete UI and query processing
 - **Contextual Validation**: Smart question validation in both languages
 - **Dynamic Language Switching**: Change language without losing session data
+- **AI Chart Labels**: Automatic chart labeling in selected language
 
 ## 📊 Visualization Options
 
-- **Fraud Distribution**: Pie chart showing fraud vs. regular transactions
-- **Amount Distribution**: Histogram of transaction amounts
-- **Time Series**: Transaction patterns over time
-- **Interactive Charts**: Powered by Matplotlib with automatic saving
+### AI-Powered Chart Suggestions
+- **Histogram**: Distribution analysis for numerical data
+- **Scatter Plot**: Relationship analysis between variables
+- **Line Chart**: Trend analysis over time or sequences
+- **Bar Chart**: Categorical data comparison
+- **Pie Chart**: Proportion and percentage visualization
+- **Box Plot**: Statistical distribution and outlier detection
+- **Heatmap**: Correlation matrix and pattern visualization
+
+### Smart Chart Selection
+- AI analyzes your data structure and suggests the most appropriate visualizations
+- Automatic detection of data types (numerical, categorical, temporal)
+- Intelligent column selection for multi-variable charts
+- Multilingual chart titles and labels
 
 ## 🔒 Security & Privacy
 
@@ -219,6 +237,7 @@ The application supports:
 - **Local Processing**: Data processed locally, only queries sent to AI
 - **No Data Storage**: Files processed in memory, not saved permanently
 - **Session Management**: Secure session state handling
+- **Universal Data Support**: Works with any CSV data without restrictions
 
 ## 🐛 Troubleshooting
 
@@ -240,6 +259,38 @@ The application supports:
 4. **Memory issues with large files**
    - Consider processing smaller chunks
    - Ensure sufficient system memory
+
+5. **Chart generation errors**
+   - Ensure data has appropriate columns for selected chart type
+   - Check for missing or invalid data values
+
+## 🎯 Use Cases
+
+DataVision AI can analyze any type of CSV data:
+
+### Business & Marketing
+- Sales performance analysis
+- Customer behavior patterns
+- Marketing campaign effectiveness
+- Revenue trends and forecasting
+
+### Scientific & Research
+- Experimental data analysis
+- Survey response analysis
+- Research dataset exploration
+- Statistical hypothesis testing
+
+### Financial & Operations
+- Financial performance metrics
+- Operational efficiency analysis
+- Budget and expense tracking
+- Risk assessment and monitoring
+
+### Personal & Educational
+- Personal data tracking
+- Academic research projects
+- Learning dataset exploration
+- Data science education
 
 ## 🤝 Contributing
 
@@ -268,4 +319,4 @@ If you encounter any issues or have questions:
 
 ---
 
-**Made with ❤️ for intelligent data analysis**
+**🔮 DataVision AI - Transforming Data into Intelligence**

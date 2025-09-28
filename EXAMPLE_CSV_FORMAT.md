@@ -1,14 +1,14 @@
 # CSV Format Documentation
 
-This document describes the expected CSV file formats that work best with the CSV AI Parser application.
+This document describes the supported CSV file formats that work with the CSV AI Parser application.
 
 ## General CSV Requirements
 
 ### Basic Format
 - **File Extension**: `.csv`
-- **Encoding**: UTF-8 (recommended)
+- **Encoding**: UTF-8 (recommended), Latin-1, ISO-8859-1, or CP1252
 - **Headers**: First row must contain column names
-- **Separator**: Comma (`,`)
+- **Separator**: Comma (`,`), Pipe (`|`), Semicolon (`;`), or Tab (`\t`) - automatically detected
 - **Decimal Separator**: Period (`.`) for numeric values
 
 ### File Structure
@@ -16,6 +16,13 @@ This document describes the expected CSV file formats that work best with the CS
 Column1,Column2,Column3,...
 value1,value2,value3,...
 value1,value2,value3,...
+```
+
+Or with pipe separator:
+```csv
+Column1|Column2|Column3|...
+value1|value2|value3|...
+value1|value2|value3|...
 ```
 
 ## Supported Data Types
