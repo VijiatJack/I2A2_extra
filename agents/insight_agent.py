@@ -3,14 +3,17 @@
 import os
 import google.generativeai as genai
 from .base_agent import BaseAgent
+from services.data_analysis_service import DataAnalysisService
+from utils.constants import DEFAULT_MODEL_NAME, API_KEY_ENV_VAR
 
 class InsightAgent(BaseAgent):
     def __init__(self):
         """Initialize the Insight agent with Google AI."""
         super().__init__()
         # Configure the Google AI client
-        genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        genai.configure(api_key=os.getenv(API_KEY_ENV_VAR))
+        self.model = genai.GenerativeModel(DEFAULT_MODEL_NAME)
+        self.data_analysis_service = DataAnalysisService()
     
     def process(self, data, **kwargs):
         """
@@ -63,28 +66,13 @@ class InsightAgent(BaseAgent):
     
     def _get_data_info(self, data):
         """
-        Get information about the DataFrame to include in the prompt.
+        Get comprehensive information about the DataFrame to include in the prompt.
         
         Args:
             data: The DataFrame
             
         Returns:
-            str: Information about the DataFrame
+            str: Comprehensive information about the DataFrame
         """
-        # Get basic information
-        info = f"Number of rows: {len(data)}\n"
-        info += f"Number of columns: {len(data.columns)}\n"
-        info += f"Columns: {', '.join(data.columns)}\n\n"
-        
-        # Add data types
-        info += "Data types:\n"
-        for col, dtype in data.dtypes.items():
-            info += f"- {col}: {dtype}\n"
-        
-        # Add basic statistics for numeric columns
-        numeric_cols = data.select_dtypes(include=['number']).columns
-        if len(numeric_cols) > 0:
-            info += "\nNumeric column statistics:\n"
-            info += data[numeric_cols].describe().to_string()
-        
-        return info
+        # Use the comprehensive data analysis service for better context
+        return self.data_analysis_service.get_ai_optimized_context(data, context_type="comprehensive")

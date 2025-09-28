@@ -1,221 +1,24 @@
 import streamlit as st
 from agents.coordinator import CoordinatorAgent
 import os
-import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 from languages import LANGUAGES, DEFAULT_LANGUAGE
+
+# Import new services and utilities
+from config.settings import get_app_settings
+from services.data_service import DataService
+from services.chart_service import ChartService
+from services.file_service import FileService
+from utils.validation import is_data_analysis_question
 
 # Load environment variables
 load_dotenv()
 
-def is_data_analysis_question(query):
-    """
-    Check if the query is related to data analysis using contextual validation.
-    Supports both Portuguese and English questions.
-    """
-    query_lower = query.lower()
-    
-    # Data analysis contexts in Portuguese and English
-    data_contexts = {
-        # Data description contexts
-        'data_description': [
-            # Portuguese
-            'tipos de dados', 'dados numéricos', 'dados categóricos', 'distribuição', 'variável', 
-            'histograma', 'intervalo', 'mínimo', 'máximo', 'média', 'mediana', 'tendência central',
-            'variabilidade', 'desvio padrão', 'variância', 'estatística', 'resumo',
-            # English
-            'data types', 'numeric data', 'categorical data', 'distribution', 'variable',
-            'histogram', 'range', 'minimum', 'maximum', 'mean', 'median', 'central tendency',
-            'variability', 'standard deviation', 'variance', 'statistics', 'summary'
-        ],
-        
-        # Pattern and trend contexts
-        'patterns_trends': [
-            # Portuguese
-            'padrões', 'tendências', 'temporal', 'frequente', 'agrupamento', 'cluster',
-            'comportamento', 'evolução', 'série temporal', 'sazonalidade',
-            # English
-            'patterns', 'trends', 'temporal', 'frequent', 'clustering', 'cluster',
-            'behavior', 'evolution', 'time series', 'seasonality'
-        ],
-        
-        # Anomaly detection contexts
-        'anomalies': [
-            # Portuguese
-            'anomalias', 'outliers', 'valores atípicos', 'discrepantes', 'anômalos',
-            'irregulares', 'suspeitos', 'incomuns',
-            # English
-            'anomalies', 'outliers', 'atypical values', 'discrepant', 'anomalous',
-            'irregular', 'suspicious', 'unusual'
-        ],
-        
-        # Variable relationships contexts
-        'relationships': [
-            # Portuguese
-            'relação', 'correlação', 'associação', 'dependência', 'influência',
-            'dispersão', 'tabela cruzada', 'conexão', 'vínculo',
-            # English
-            'relationship', 'correlation', 'association', 'dependency', 'influence',
-            'scatter', 'cross table', 'connection', 'link'
-        ],
-        
-        # Fraud detection specific contexts
-        'fraud_detection': [
-            # Portuguese
-            'fraude', 'fraudulento', 'transação', 'pagamento', 'suspeita', 'irregular',
-            'detecção', 'classificação', 'normal', 'regular', 'legítimo',
-            # English
-            'fraud', 'fraudulent', 'transaction', 'payment', 'suspicious', 'irregular',
-            'detection', 'classification', 'normal', 'regular', 'legitimate'
-        ],
-        
-        # General data analysis contexts
-        'general_analysis': [
-            # Portuguese
-            'dados', 'arquivo', 'csv', 'análise', 'exploração', 'investigação',
-            'interpretação', 'insights', 'conclusões', 'resultados', 'descobertas',
-            'opinião', 'avaliação', 'qualidade', 'estrutura',
-            # English
-            'data', 'file', 'csv', 'analysis', 'exploration', 'investigation',
-            'interpretation', 'insights', 'conclusions', 'results', 'findings',
-            'opinion', 'evaluation', 'quality', 'structure'
-        ]
-    }
-    
-    # Check if query contains any relevant context terms
-    for context_category, terms in data_contexts.items():
-        if any(term in query_lower for term in terms):
-            return True
-    
-    # Additional check for question words that indicate analytical intent
-    question_indicators = [
-        # Portuguese
-        'qual', 'quais', 'como', 'onde', 'quando', 'por que', 'porque', 'quantos', 'quantas',
-        'existe', 'existem', 'há', 'pode', 'podem', 'deve', 'devem', 'é', 'são',
-        # English
-        'what', 'which', 'how', 'where', 'when', 'why', 'how many', 'how much',
-        'is', 'are', 'can', 'could', 'should', 'would', 'do', 'does', 'did'
-    ]
-    
-    has_question_indicator = any(indicator in query_lower for indicator in question_indicators)
-    
-    # If it has question indicators and some data-related terms, it's likely valid
-    basic_data_terms = [
-        # Portuguese
-        'dados', 'arquivo', 'csv', 'tabela', 'coluna', 'linha', 'valor', 'campo',
-        # English
-        'data', 'file', 'csv', 'table', 'column', 'row', 'value', 'field'
-    ]
-    
-    has_basic_data_terms = any(term in query_lower for term in basic_data_terms)
-    
-    return has_question_indicator and has_basic_data_terms
 
-def analyze_data(df):
-    """Generate initial analysis of the CSV data."""
-    analysis = {}
-    
-    # 1. Initial analysis of the records
-    total_records = len(df)
-    regular_records = len(df[df['Class'] == 0])
-    fraud_records = len(df[df['Class'] == 1])
-    fraud_percentage = (fraud_records / total_records) * 100
-    regular_percentage = (regular_records / total_records) * 100
-    
-    analysis['records'] = {
-        'total': total_records,
-        'regular': regular_records,
-        'fraudulent': fraud_records,
-        'regular_percentage': regular_percentage,
-        'fraud_percentage': fraud_percentage
-    }
-    
-    # 2. Total time in batch
-    total_time = df['Time'].max() - df['Time'].min()
-    analysis['time'] = {
-        'total_seconds': total_time,
-        'total_hours': total_time / 3600,
-        'total_days': total_time / (3600 * 24)
-    }
-    
-    # 3. Analysis of amounts
-    regular_df = df[df['Class'] == 0]
-    fraud_df = df[df['Class'] == 1]
-    
-    # Get amount statistics
-    regular_min = regular_df['Amount'].min()
-    regular_max = regular_df['Amount'].max()
-    regular_avg = regular_df['Amount'].mean()
-    regular_total = regular_df['Amount'].sum()
-    
-    fraud_min = fraud_df['Amount'].min() if not fraud_df.empty else 0
-    fraud_max = fraud_df['Amount'].max() if not fraud_df.empty else 0
-    fraud_avg = fraud_df['Amount'].mean() if not fraud_df.empty else 0
-    fraud_total = fraud_df['Amount'].sum()
-    
-    total_amount = regular_total + fraud_total
-    regular_amount_percentage = (regular_total / total_amount) * 100
-    fraud_amount_percentage = (fraud_total / total_amount) * 100
-    
-    analysis['amounts'] = {
-        'regular_min': regular_min,
-        'regular_max': regular_max,
-        'regular_avg': regular_avg,
-        'regular_total': regular_total,
-        'fraud_min': fraud_min,
-        'fraud_max': fraud_max,
-        'fraud_avg': fraud_avg,
-        'fraud_total': fraud_total,
-        'total': total_amount,
-        'regular_percentage': regular_amount_percentage,
-        'fraud_percentage': fraud_amount_percentage
-    }
-    
-    return analysis
-
-def generate_graph(df, graph_type):
-    """Generate a graph based on the data and requested type."""
-    plt.figure(figsize=(10, 6))
-    
-    if graph_type == "fraud_distribution":
-        # Create a pie chart of fraud vs regular transactions
-        labels = ['Regular', 'Fraudulent']
-        sizes = [len(df[df['Class'] == 0]), len(df[df['Class'] == 1])]
-        plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
-        plt.axis('equal')
-        plt.title('Distribution of Regular vs Fraudulent Transactions')
-        
-    elif graph_type == "amount_distribution":
-        # Create histograms of transaction amounts
-        plt.hist(df[df['Class'] == 0]['Amount'], alpha=0.5, label='Regular')
-        plt.hist(df[df['Class'] == 1]['Amount'], alpha=0.5, label='Fraudulent')
-        plt.xlabel('Amount')
-        plt.ylabel('Frequency')
-        plt.title('Distribution of Transaction Amounts')
-        plt.legend()
-        
-    elif graph_type == "time_series":
-        # Create a time series plot of transactions
-        df_grouped = df.groupby(['Time', 'Class']).size().unstack().fillna(0)
-        if 0 in df_grouped.columns:
-            plt.plot(df_grouped.index, df_grouped[0], label='Regular')
-        if 1 in df_grouped.columns:
-            plt.plot(df_grouped.index, df_grouped[1], label='Fraudulent')
-        plt.xlabel('Time')
-        plt.ylabel('Number of Transactions')
-        plt.title('Transactions Over Time')
-        plt.legend()
-    
-    # Save the figure to a temporary file
-    fig_path = "temp_graph.png"
-    plt.savefig(fig_path)
-    plt.close()
-    
-    return fig_path
 
 # Check if API key is set
-if not os.getenv("GOOGLE_API_KEY"):
-    st.error("Please set your GOOGLE_API_KEY in a .env file")
+if not os.getenv("GEMINI_API_KEY"):
+    st.error("Please set your GEMINI_API_KEY in a .env file")
     st.stop()
 
 # Set page configuration
@@ -224,6 +27,11 @@ st.set_page_config(
     page_icon="📊",
     layout="wide"
 )
+
+# Initialize services
+data_service = DataService()
+chart_service = ChartService()
+file_service = FileService()
 
 # Initialize the coordinator agent
 coordinator = CoordinatorAgent()
@@ -284,7 +92,7 @@ if uploaded_file is not None:
         
         # Process the file with a loading spinner
         with st.spinner(lang["processing"]):
-            data_preview = coordinator.process_file(uploaded_file)
+            data_preview = file_service.process_uploaded_file(uploaded_file)
         
         # Check if data_preview is a string (error message)
         if isinstance(data_preview, str):
@@ -302,7 +110,7 @@ if uploaded_file is not None:
             
             # Generate initial analysis
             with st.spinner(lang.get("generating_analysis", "Generating initial analysis...")):
-                analysis_results = analyze_data(data_preview)
+                analysis_results = data_service.analyze_data(data_preview)
                 st.session_state.analysis_results = analysis_results
     
     # If file is processed successfully, display analysis and allow queries
@@ -380,7 +188,7 @@ if uploaded_file is not None:
         
         if st.button(lang.get("generate_graph", "Generate Graph")):
             with st.spinner(lang.get("generating_graph", "Generating graph...")):
-                graph_path = generate_graph(st.session_state.data, selected_graph)
+                graph_path = chart_service.generate_graph(st.session_state.data, selected_graph)
                 st.image(graph_path)
         
         # User query section
