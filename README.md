@@ -74,7 +74,7 @@ I2A2_extra/
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone [https://github.com/VijiatJack/I2A2_extra](https://github.com/VijiatJack/I2A2_extra.git)
    cd I2A2_extra
    ```
 
