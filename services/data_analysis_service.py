@@ -174,7 +174,8 @@ class DataAnalysisService:
                 strat_col = categorical_cols[0]
                 stratified_sample = data.groupby(strat_col, group_keys=False).apply(
                     lambda x: x.sample(min(len(x), max(1, self.max_sample_size // data[strat_col].nunique())), 
-                                     random_state=42)
+                                     random_state=42),
+                    include_groups=False
                 ).reset_index(drop=True)
                 
                 sample_strategies.append({

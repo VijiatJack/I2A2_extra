@@ -22,6 +22,7 @@ class DataAnalysisValidator:
         self._data_contexts = self._initialize_data_contexts()
         self._question_indicators = self._initialize_question_indicators()
         self._basic_data_terms = self._initialize_basic_data_terms()
+        self._current_data_context = None
     
     def _initialize_data_contexts(self) -> Dict[str, List[str]]:
         """Initialize data analysis contexts in Portuguese and English."""
@@ -102,6 +103,127 @@ class DataAnalysisValidator:
             'is', 'are', 'can', 'could', 'should', 'would', 'do', 'does', 'did'
         ]
     
+    def set_data_context(self, data_columns: List[str], data_types: Dict[str, str] = None) -> None:
+        """
+        Set the current data context based on the loaded CSV file.
+        
+        Args:
+            data_columns (List[str]): List of column names from the CSV
+            data_types (Dict[str, str]): Optional dictionary of column names to data types
+        """
+        self._current_data_context = {
+            'columns': [col.lower() for col in data_columns],
+            'original_columns': data_columns,
+            'data_types': data_types or {}
+        }
+    
+    def _extract_column_references(self, query: str) -> List[str]:
+        """
+        Extract potential column references from the query.
+        
+        Args:
+            query (str): The user query
+            
+        Returns:
+            List[str]: List of potential column names found in the query
+        """
+        if not self._current_data_context:
+            return []
+        
+        query_lower = query.lower()
+        found_columns = []
+        
+        for original_col, lower_col in zip(self._current_data_context['original_columns'], 
+                                         self._current_data_context['columns']):
+            # Check for exact column name matches
+            if lower_col in query_lower:
+                found_columns.append(original_col)
+            
+            # Check for partial matches for common column patterns
+            words = lower_col.split('_')
+            if len(words) > 1:
+                for word in words:
+                    if len(word) > 2 and word in query_lower:
+                        found_columns.append(original_col)
+                        break
+        
+        return found_columns
+    
+    def _has_relevant_data_terms(self, query: str) -> bool:
+        """
+        Check if query contains terms that are relevant to the current dataset.
+        
+        Args:
+            query (str): The user query
+            
+        Returns:
+            bool: True if query contains relevant terms for the current data
+        """
+        if not self._current_data_context:
+            return self.has_basic_data_terms(query)
+        
+        query_lower = query.lower()
+        
+        # Check for direct column references
+        column_refs = self._extract_column_references(query)
+        if column_refs:
+            return True
+        
+        # Check for data type related terms
+        columns = self._current_data_context['columns']
+        
+        # Geographic terms
+        geo_terms = ['state', 'states', 'estado', 'estados', 'city', 'cities', 'cidade', 'cidades', 
+                    'country', 'countries', 'país', 'países', 'region', 'regions', 'região', 'regiões',
+                    'address', 'endereço', 'location', 'localização', 'zip', 'cep', 'postal']
+        
+        has_geo_columns = any(any(geo in col for geo in ['state', 'city', 'country', 'region', 'address', 'zip', 'postal', 'location']) 
+                             for col in columns)
+        
+        if has_geo_columns and any(term in query_lower for term in geo_terms):
+            return True
+        
+        # Financial terms
+        financial_terms = ['amount', 'value', 'price', 'cost', 'money', 'dollar', 'currency',
+                          'valor', 'preço', 'custo', 'dinheiro', 'moeda', 'transaction', 'transação',
+                          'payment', 'pagamento', 'fraud', 'fraude', 'bin', 'card', 'cartão']
+        
+        has_financial_columns = any(any(fin in col for fin in ['amount', 'value', 'price', 'cost', 'transaction', 'payment', 'fraud', 'bin', 'card']) 
+                                   for col in columns)
+        
+        if has_financial_columns and any(term in query_lower for term in financial_terms):
+            return True
+        
+        # Time-related terms
+        time_terms = ['time', 'date', 'day', 'month', 'year', 'hour', 'minute', 'when', 'period',
+                     'tempo', 'data', 'dia', 'mês', 'ano', 'hora', 'minuto', 'quando', 'período']
+        
+        has_time_columns = any(any(time in col for time in ['time', 'date', 'day', 'month', 'year', 'hour', 'created', 'updated']) 
+                              for col in columns)
+        
+        if has_time_columns and any(term in query_lower for term in time_terms):
+            return True
+        
+        # Category/classification terms
+        category_terms = ['type', 'category', 'class', 'group', 'status', 'kind',
+                         'tipo', 'categoria', 'classe', 'grupo', 'status', 'espécie']
+        
+        has_category_columns = any(any(cat in col for cat in ['type', 'category', 'class', 'group', 'status', 'kind']) 
+                                  for col in columns)
+        
+        if has_category_columns and any(term in query_lower for term in category_terms):
+            return True
+        
+        # Numeric analysis terms
+        numeric_terms = ['count', 'total', 'sum', 'average', 'mean', 'max', 'min', 'distribution',
+                        'contar', 'total', 'soma', 'média', 'máximo', 'mínimo', 'distribuição']
+        
+        if any(term in query_lower for term in numeric_terms):
+            return True
+        
+        # Fall back to basic data terms
+        return self.has_basic_data_terms(query)
+    
     def _initialize_basic_data_terms(self) -> List[str]:
         """Initialize basic data-related terms in Portuguese and English."""
         return [
@@ -172,7 +294,7 @@ class DataAnalysisValidator:
         Comprehensive validation for data analysis questions.
         
         This method combines multiple validation checks to determine if a query
-        is a valid data analysis question.
+        is a valid data analysis question based on the current data context.
         
         Args:
             query (str): The user query to validate
@@ -187,24 +309,27 @@ class DataAnalysisValidator:
         if not self.validate_question_length(query):
             return False
         
-        # Check for data analysis context
-        has_context = self.has_data_context(query)
-        
-        # Check for question indicators and basic data terms
+        # Check for question indicators
         has_indicators = self.has_question_indicators(query)
-        has_data_terms = self.has_basic_data_terms(query)
         
-        # A valid question should have either:
-        # 1. Strong data analysis context, OR
-        # 2. Question indicators AND basic data terms
-        return has_context or (has_indicators and has_data_terms)
+        # Use context-aware validation if data context is available
+        if self._current_data_context:
+            has_relevant_terms = self._has_relevant_data_terms(query)
+            # A valid question should have question indicators AND relevant terms for the current data
+            return has_indicators and has_relevant_terms
+        else:
+            # Fall back to original logic if no data context is set
+            has_context = self.has_data_context(query)
+            has_data_terms = self.has_basic_data_terms(query)
+            # A valid question should have either strong data analysis context, OR question indicators AND basic data terms
+            return has_context or (has_indicators and has_data_terms)
 
 
 # Create a global validator instance
 _validator = DataAnalysisValidator()
 
 
-def is_data_analysis_question(query: str) -> bool:
+def is_data_analysis_question(query: str, data_columns: List[str] = None) -> bool:
     """
     Check if the query is related to data analysis using contextual validation.
     Supports both Portuguese and English questions.
@@ -213,10 +338,15 @@ def is_data_analysis_question(query: str) -> bool:
     
     Args:
         query (str): The user query to validate
+        data_columns (List[str]): Optional list of column names from the current dataset
         
     Returns:
         bool: True if query is a valid data analysis question, False otherwise
     """
+    # Set data context if provided
+    if data_columns:
+        _validator.set_data_context(data_columns)
+    
     return _validator.is_valid_data_analysis_question(query)
 
 

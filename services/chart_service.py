@@ -328,55 +328,79 @@ class ChartService:
         Returns:
             Dict[str, str]: Dictionary of chart types and their descriptions
         """
-        # Analyze data structure
-        data_info = self._analyze_data_structure(data)
-        
-        # Generate AI suggestions
-        if language == 'pt_BR':
-            prompt = f"""
-            Analise os seguintes dados CSV e sugira os 3-5 tipos de gráficos mais apropriados:
-            
-            {data_info}
-            
-            Para cada sugestão, forneça:
-            1. Tipo de gráfico (use nomes técnicos em inglês como 'histogram', 'scatter', 'line', 'bar', 'pie')
-            2. Descrição CURTA em português (máximo 6 palavras) do que o gráfico mostraria
-            
-            Formato da resposta:
-            tipo_grafico: Descrição curta em português
-            
-            Exemplo:
-            histogram: Distribuição de valores
-            scatter: Relação entre variáveis
-            """
-        else:
-            prompt = f"""
-            Analyze the following CSV data and suggest the 3-5 most appropriate chart types:
-            
-            {data_info}
-            
-            For each suggestion, provide:
-            1. Chart type (use technical names like 'histogram', 'scatter', 'line', 'bar', 'pie')
-            2. SHORT description in English (maximum 6 words) of what the chart would show
-            
-            Response format:
-            chart_type: Short description in English
-            
-            Example:
-            histogram: Distribution of values
-            scatter: Relationship between variables
-            """
-        
         try:
+            print(f"[DEBUG] Getting AI chart suggestions for data with shape: {data.shape}")
+            
+            # Analyze data structure
+            data_info = self._analyze_data_structure(data)
+            
+            # Generate AI suggestions
+            if language == 'pt_BR':
+                prompt = f"""
+                Analise os seguintes dados CSV e sugira os 3-5 tipos de gráficos mais apropriados:
+                
+                {data_info}
+                
+                Para cada sugestão, forneça:
+                1. Tipo de gráfico (use nomes técnicos em inglês como 'histogram', 'scatter', 'line', 'bar', 'pie')
+                2. Descrição CURTA em português (máximo 6 palavras) do que o gráfico mostraria
+                
+                Formato da resposta:
+                tipo_grafico: Descrição curta em português
+                
+                Exemplo:
+                histogram: Distribuição de valores
+                scatter: Relação entre variáveis
+                """
+            else:
+                prompt = f"""
+                Analyze the following CSV data and suggest the 3-5 most appropriate chart types:
+                
+                {data_info}
+                
+                For each suggestion, provide:
+                1. Chart type (use technical names like 'histogram', 'scatter', 'line', 'bar', 'pie')
+                2. SHORT description in English (maximum 6 words) of what the chart would show
+                
+                Response format:
+                chart_type: Short description in English
+                
+                Example:
+                histogram: Distribution of values
+                scatter: Relationship between variables
+                """
+            
             response = self.model.generate_content(prompt)
-            suggestions = self._parse_chart_suggestions(response.text)
+            ai_suggestions = self._parse_chart_suggestions(response.text)
+            
+            print(f"[DEBUG] AI suggestions received: {ai_suggestions}")
+            
+            # Ensure we have exactly 5 suggestions
+            if ai_suggestions and len(ai_suggestions) >= 3:
+                # Take first 5 suggestions from AI
+                suggestions = dict(list(ai_suggestions.items())[:5])
+                
+                # If we have less than 5, fill with defaults
+                if len(suggestions) < 5:
+                    defaults = self._get_default_chart_suggestions(data, language)
+                    for key, value in defaults.items():
+                        if key not in suggestions and len(suggestions) < 5:
+                            suggestions[key] = value
+            else:
+                # Fallback to default suggestions
+                print("[DEBUG] Using default chart suggestions as fallback")
+                suggestions = self._get_default_chart_suggestions(data, language)
+            
+            print(f"[DEBUG] Final suggestions: {suggestions}")
             return suggestions
+            
         except Exception as e:
-            # Fallback to default suggestions
+            print(f"[ERROR] Error getting AI suggestions: {str(e)}")
+            # Always return default suggestions as fallback
             return self._get_default_chart_suggestions(data, language)
     
     def _get_ai_chart_suggestions(self, data: pd.DataFrame, chart_type: str, language: str) -> Dict:
-        """Get AI suggestions for chart configuration."""
+        """Get AI suggestions for chart configuration with proper column selection."""
         data_info = self._analyze_data_structure(data)
         
         if language == 'pt_BR':
@@ -385,13 +409,28 @@ class ChartService:
             
             {data_info}
             
-            Sugira:
-            1. Título apropriado em português
-            2. Rótulos dos eixos em português
-            3. Cores recomendadas
-            4. Colunas mais relevantes para usar
+            Analise os dados e retorne APENAS um JSON válido com a seguinte estrutura:
+            {{
+                "type": "{chart_type}",
+                "x_column": "nome_da_coluna_x",
+                "y_column": "nome_da_coluna_y",
+                "title": "Título do gráfico (máximo 6 palavras)",
+                "xlabel": "Rótulo do eixo X",
+                "ylabel": "Rótulo do eixo Y",
+                "transformation": "Descrição de qualquer transformação necessária nos dados (opcional)",
+                "colors": ["#1f77b4", "#ff7f0e", "#2ca02c"]
+            }}
             
-            Responda em formato JSON.
+            REGRAS:
+            - Use apenas colunas que existem nos dados
+            - Para histogram: apenas x_column é necessário (y_column pode ser null)
+            - Para pie: apenas x_column (categórica) é necessário (y_column pode ser null)
+            - Para scatter/line: x_column e y_column são necessários
+            - Para bar: x_column (categórica) é necessário, y_column opcional
+            - Para box: x_column (numérica) é necessário (y_column pode ser null)
+            - Para heatmap: use correlações entre colunas numéricas (x_column e y_column podem ser null)
+            - Se precisar de transformações como "primeiro dígito", "agrupamento", etc., descreva no campo "transformation"
+            - Escolha as colunas mais relevantes e interessantes para análise
             """
         else:
             prompt = f"""
@@ -399,30 +438,71 @@ class ChartService:
             
             {data_info}
             
-            Suggest:
-            1. Appropriate title in English
-            2. Axis labels in English
-            3. Recommended colors
-            4. Most relevant columns to use
+            Analyze the data and return ONLY a valid JSON with this structure:
+            {{
+                "type": "{chart_type}",
+                "x_column": "x_column_name",
+                "y_column": "y_column_name",
+                "title": "Chart title (max 6 words)",
+                "xlabel": "X axis label",
+                "ylabel": "Y axis label",
+                "transformation": "Description of any data transformation needed (optional)",
+                "colors": ["#1f77b4", "#ff7f0e", "#2ca02c"]
+            }}
             
-            Respond in JSON format.
+            RULES:
+            - Use only columns that exist in the data
+            - For histogram: only x_column is needed (y_column can be null)
+            - For pie: only x_column (categorical) is needed (y_column can be null)
+            - For scatter/line: both x_column and y_column are needed
+            - For bar: x_column (categorical) is needed, y_column optional
+            - For box: x_column (numerical) is needed (y_column can be null)
+            - For heatmap: use correlations between numerical columns (x_column and y_column can be null)
+            - If transformations like "first digit", "grouping", etc. are needed, describe in "transformation" field
+            - Choose the most relevant and interesting columns for analysis
             """
         
         try:
+            print(f"DEBUG: Sending AI chart config prompt for {chart_type}")
             response = self.model.generate_content(prompt)
-            # Parse the JSON response (simplified for now)
+            response_text = response.text.strip()
+            print(f"DEBUG: AI chart config response: {response_text}")
+            
+            # Clean and parse JSON response
+            if '```json' in response_text:
+                response_text = response_text.split('```json')[1].split('```')[0].strip()
+            elif '```' in response_text:
+                response_text = response_text.split('```')[1].strip()
+            
+            import json
+            chart_config = json.loads(response_text)
+            print(f"DEBUG: Parsed chart config: {chart_config}")
+            
+            # Validate that required fields exist
+            if 'type' not in chart_config:
+                chart_config['type'] = chart_type
+            if 'title' not in chart_config:
+                chart_config['title'] = f"Data Visualization - {chart_type.replace('_', ' ').title()}"
+            if 'xlabel' not in chart_config:
+                chart_config['xlabel'] = 'X Axis'
+            if 'ylabel' not in chart_config:
+                chart_config['ylabel'] = 'Y Axis'
+            if 'colors' not in chart_config:
+                chart_config['colors'] = ['#1f77b4', '#ff7f0e', '#2ca02c']
+            
+            return chart_config
+            
+        except Exception as e:
+            print(f"DEBUG: Error getting AI chart config: {e}")
+            # Return fallback configuration
             return {
+                'type': chart_type,
                 'title': f"Data Visualization - {chart_type.replace('_', ' ').title()}",
                 'xlabel': 'X Axis',
                 'ylabel': 'Y Axis',
-                'colors': ['#1f77b4', '#ff7f0e', '#2ca02c']
-            }
-        except Exception:
-            return {
-                'title': f"Data Visualization - {chart_type.replace('_', ' ').title()}",
-                'xlabel': 'X Axis',
-                'ylabel': 'Y Axis',
-                'colors': ['#1f77b4', '#ff7f0e', '#2ca02c']
+                'colors': ['#1f77b4', '#ff7f0e', '#2ca02c'],
+                'x_column': None,
+                'y_column': None
             }
     
     def _analyze_data_structure(self, data: pd.DataFrame) -> str:
@@ -499,24 +579,82 @@ class ChartService:
         return suggestions
     
     def _get_default_chart_suggestions(self, data: pd.DataFrame, language: str) -> Dict[str, str]:
-        """Get default chart suggestions as fallback."""
+        """Get default chart suggestions as fallback, filtered by data compatibility."""
+        # Check data characteristics
+        numeric_columns = data.select_dtypes(include=['number']).columns
+        categorical_columns = data.select_dtypes(include=['object', 'category']).columns
+        
+        suggestions = {}
+        
         if language == 'pt_BR':
-            return {
-                'histogram': 'Histograma - Distribuição de valores numéricos',
-                'scatter': 'Gráfico de Dispersão - Relação entre duas variáveis',
-                'bar': 'Gráfico de Barras - Comparação de categorias',
-                'line': 'Gráfico de Linha - Tendências ao longo do tempo'
-            }
+            # Always include histogram if there are numeric columns
+            if len(numeric_columns) > 0:
+                suggestions['histogram'] = 'Histograma - Distribuição de valores numéricos'
+            
+            # Include scatter plot only if there are at least 2 numeric columns
+            if len(numeric_columns) >= 2:
+                suggestions['scatter'] = 'Gráfico de Dispersão - Relação entre duas variáveis'
+            
+            # Include bar chart if there are categorical columns
+            if len(categorical_columns) > 0:
+                suggestions['bar'] = 'Gráfico de Barras - Comparação de categorias'
+            
+            # Include line chart if there are numeric columns (can work with index)
+            if len(numeric_columns) > 0:
+                suggestions['line'] = 'Gráfico de Linha - Tendências ao longo do tempo'
+            
+            # Include pie chart if there are categorical columns
+            if len(categorical_columns) > 0:
+                suggestions['pie'] = 'Gráfico de Pizza - Proporções de categorias'
         else:
-            return {
-                'histogram': 'Histogram - Distribution of numeric values',
-                'scatter': 'Scatter Plot - Relationship between two variables',
-                'bar': 'Bar Chart - Comparison of categories',
-                'line': 'Line Chart - Trends over time'
-            }
+            # Always include histogram if there are numeric columns
+            if len(numeric_columns) > 0:
+                suggestions['histogram'] = 'Histogram - Distribution of numeric values'
+            
+            # Include scatter plot only if there are at least 2 numeric columns
+            if len(numeric_columns) >= 2:
+                suggestions['scatter'] = 'Scatter Plot - Relationship between two variables'
+            
+            # Include bar chart if there are categorical columns
+            if len(categorical_columns) > 0:
+                suggestions['bar'] = 'Bar Chart - Comparison of categories'
+            
+            # Include line chart if there are numeric columns (can work with index)
+            if len(numeric_columns) > 0:
+                suggestions['line'] = 'Line Chart - Trends over time'
+            
+            # Include pie chart if there are categorical columns
+            if len(categorical_columns) > 0:
+                suggestions['pie'] = 'Pie Chart - Category proportions'
+        
+        # Ensure we have at least 5 suggestions by adding generic ones if needed
+        if len(suggestions) < 5:
+            if language == 'pt_BR':
+                fallback_suggestions = {
+                    'box': 'Gráfico de Caixa - Distribuição e outliers',
+                    'heatmap': 'Mapa de Calor - Correlações entre variáveis'
+                }
+            else:
+                fallback_suggestions = {
+                    'box': 'Box Plot - Distribution and outliers',
+                    'heatmap': 'Heatmap - Variable correlations'
+                }
+            
+            for key, value in fallback_suggestions.items():
+                if len(suggestions) < 5:
+                    suggestions[key] = value
+        
+        return suggestions
     
     def _generate_enhanced_chart(self, data: pd.DataFrame, chart_type: str, config: Dict, language: str) -> str:
-        """Generate enhanced chart with AI suggestions."""
+        """Generate enhanced chart with AI configuration and transformation support."""
+        print(f"DEBUG: Generating enhanced chart - type: {chart_type}, config: {config}")
+        
+        # Apply transformations if specified
+        if 'transformation' in config and config['transformation']:
+            print(f"DEBUG: Applying transformation: {config['transformation']}")
+            data = self._apply_data_transformation(data, config)
+        
         # Handle standard chart types directly
         standard_chart_generators = {
             'histogram': self._generate_histogram,
@@ -544,6 +682,56 @@ class ChartService:
         
         # If chart type is not supported, raise an error
         raise ValueError(f"Unsupported chart type: {chart_type}")
+    
+    def _apply_data_transformation(self, data: pd.DataFrame, config: Dict) -> pd.DataFrame:
+        """Apply data transformations based on AI configuration."""
+        transformation = config.get('transformation', '').lower()
+        
+        if not transformation:
+            return data
+        
+        print(f"DEBUG: Processing transformation: {transformation}")
+        
+        # Handle first digit/character extraction
+        if any(keyword in transformation for keyword in ['primeiro', 'first', 'dígito', 'digit', 'caractere', 'character']):
+            # Find the source column from x_column or detect from transformation description
+            source_column = config.get('x_column')
+            
+            if not source_column:
+                # Try to detect column from transformation text
+                for col in data.columns:
+                    if col.lower() in transformation:
+                        source_column = col
+                        break
+            
+            if source_column and source_column in data.columns:
+                print(f"DEBUG: Extracting first character from column: {source_column}")
+                
+                # Create new column with first character/digit
+                first_char_col = f"first_char_of_{source_column}"
+                data[first_char_col] = data[source_column].astype(str).str[0]
+                
+                # Count frequencies
+                freq_data = data[first_char_col].value_counts().reset_index()
+                freq_data.columns = [first_char_col, 'count']
+                
+                # Ensure all digits 0-9 are present if dealing with digits
+                if 'dígito' in transformation or 'digit' in transformation:
+                    all_digits = pd.DataFrame({first_char_col: [str(i) for i in range(10)]})
+                    freq_data = all_digits.merge(freq_data, on=first_char_col, how='left')
+                    freq_data['count'] = freq_data['count'].fillna(0)
+                
+                # Update config to use the new columns
+                config['x_column'] = first_char_col
+                config['y_column'] = 'count'
+                
+                print(f"DEBUG: Transformation result - new data shape: {freq_data.shape}")
+                return freq_data
+        
+        # Handle other transformations as needed
+        # Add more transformation logic here
+        
+        return data
     
     def _generate_histogram(self, data: pd.DataFrame, config: Dict, language: str) -> str:
         """Generate a histogram chart."""
@@ -575,7 +763,7 @@ class ChartService:
         
         return self._save_and_return_path()
     
-    def generate_custom_chart(self, data: pd.DataFrame, user_description: str, language: str = 'en_US') -> str:
+    def generate_custom_chart(self, data: pd.DataFrame, user_description: str, language: str = 'en_US', conversation_history: List[str] = None) -> str:
         """
         Generate a custom chart based on user's natural language description.
         
@@ -590,22 +778,37 @@ class ChartService:
         Raises:
             ValueError: If description is invalid or chart cannot be generated
         """
+        print(f"DEBUG: Starting custom chart generation...")
+        print(f"DEBUG: User description: {user_description}")
+        print(f"DEBUG: Language: {language}")
+        print(f"DEBUG: Data shape: {data.shape}")
+        print(f"DEBUG: Data columns: {list(data.columns)}")
+        
         if data is None or data.empty:
+            print("DEBUG: Data is None or empty")
             raise ValueError("Data cannot be None or empty")
         
         if not user_description or not user_description.strip():
+            print("DEBUG: User description is empty")
             raise ValueError("Chart description cannot be empty")
         
+        print("DEBUG: Input validation passed, calling _interpret_custom_chart_request...")
+        
         # Get AI interpretation of the user's request
-        chart_config = self._interpret_custom_chart_request(data, user_description, language)
+        chart_config = self._interpret_custom_chart_request(data, user_description, language, conversation_history)
+        
+        print(f"DEBUG: Chart config returned: {chart_config}")
         
         if not chart_config:
+            print("DEBUG: Chart config is None, raising ValueError")
             raise ValueError("Could not interpret chart request")
+        
+        print("DEBUG: Chart config is valid, proceeding with chart generation...")
         
         # Generate the chart based on AI interpretation
         return self._generate_enhanced_chart(data, chart_config['type'], chart_config, language)
     
-    def _interpret_custom_chart_request(self, data: pd.DataFrame, user_description: str, language: str) -> Dict:
+    def _interpret_custom_chart_request(self, data: pd.DataFrame, user_description: str, language: str, conversation_history: List[str] = None) -> Dict:
         """
         Use AI to interpret user's natural language chart request.
         
@@ -621,6 +824,18 @@ class ChartService:
             # Analyze data structure
             data_info = self._analyze_data_structure(data)
             
+            # Build conversation context if available
+            context = ""
+            if conversation_history and len(conversation_history) > 0:
+                if language == 'pt_BR':
+                    context = f"\nCONTEXTO DA CONVERSA ANTERIOR:\n"
+                    for i, entry in enumerate(conversation_history[-5:], 1):  # Last 5 entries
+                        context += f"{i}. {entry}\n"
+                else:
+                    context = f"\nPREVIOUS CONVERSATION CONTEXT:\n"
+                    for i, entry in enumerate(conversation_history[-5:], 1):  # Last 5 entries
+                        context += f"{i}. {entry}\n"
+            
             # Create prompt for AI interpretation
             if language == 'pt_BR':
                 prompt = f"""
@@ -628,7 +843,7 @@ class ChartService:
                 
                 DADOS DISPONÍVEIS:
                 {data_info}
-                
+                {context}
                 SOLICITAÇÃO DO USUÁRIO:
                 "{user_description}"
                 
@@ -638,7 +853,8 @@ class ChartService:
                     "x_column": "nome_da_coluna_x",
                     "y_column": "nome_da_coluna_y",
                     "title": "Título do gráfico (máximo 6 palavras)",
-                    "description": "Breve descrição do gráfico"
+                    "description": "Breve descrição do gráfico",
+                    "transformation": "Descrição de qualquer transformação necessária nos dados (opcional)"
                 }}
                 
                 REGRAS:
@@ -649,6 +865,9 @@ class ChartService:
                 - Para bar: x_column (categórica) e opcionalmente y_column
                 - Para box: x_column (numérica) é necessário
                 - Para heatmap: use correlações entre colunas numéricas
+                - Se a solicitação mencionar "primeiro dígito", "primeiros caracteres", ou transformações similares, inclua isso no campo "transformation"
+                - Para agrupamentos especiais, use o campo "transformation" para descrever a operação
+                - Considere o contexto da conversa anterior para melhor interpretação
                 """
             else:
                 prompt = f"""
@@ -656,7 +875,7 @@ class ChartService:
                 
                 AVAILABLE DATA:
                 {data_info}
-                
+                {context}
                 USER REQUEST:
                 "{user_description}"
                 
@@ -666,7 +885,8 @@ class ChartService:
                     "x_column": "x_column_name",
                     "y_column": "y_column_name",
                     "title": "Chart title (max 6 words)",
-                    "description": "Brief chart description"
+                    "description": "Brief chart description",
+                    "transformation": "Description of any data transformation needed (optional)"
                 }}
                 
                 RULES:
@@ -677,10 +897,15 @@ class ChartService:
                 - For bar: x_column (categorical) and optionally y_column
                 - For box: x_column (numerical) is needed
                 - For heatmap: use correlations between numerical columns
+                - If the request mentions "first digit", "first characters", or similar transformations, include this in the "transformation" field
+                - For special groupings, use the "transformation" field to describe the operation
+                - Consider the previous conversation context for better interpretation
                 """
             
+            print(f"DEBUG: Sending prompt to AI model...")
             response = self.model.generate_content(prompt)
             response_text = response.text.strip()
+            print(f"DEBUG: AI response: {response_text}")
             
             # Clean and parse JSON response
             if '```json' in response_text:
@@ -688,17 +913,25 @@ class ChartService:
             elif '```' in response_text:
                 response_text = response_text.split('```')[1].strip()
             
+            print(f"DEBUG: Cleaned response: {response_text}")
+            
             import json
             chart_config = json.loads(response_text)
+            print(f"DEBUG: Parsed config: {chart_config}")
             
             # Validate the configuration
             if not self._validate_chart_config(chart_config, data):
+                print("DEBUG: Chart config validation failed")
                 return None
             
+            print("DEBUG: Chart config validation passed")
             return chart_config
             
         except Exception as e:
-            print(f"Error interpreting custom chart request: {e}")
+            print(f"DEBUG: Error interpreting custom chart request: {e}")
+            print(f"DEBUG: Exception type: {type(e)}")
+            import traceback
+            print(f"DEBUG: Traceback: {traceback.format_exc()}")
             return None
     
     def _validate_chart_config(self, config: Dict, data: pd.DataFrame) -> bool:
@@ -713,33 +946,51 @@ class ChartService:
             bool: True if configuration is valid
         """
         try:
+            print(f"DEBUG: Validating chart config: {config}")
+            
             # Check required fields
             if 'type' not in config:
+                print("DEBUG: Validation failed - no 'type' field")
                 return False
             
             chart_type = config['type']
             if chart_type not in ['histogram', 'scatter', 'line', 'bar', 'pie', 'box', 'heatmap']:
+                print(f"DEBUG: Validation failed - unsupported chart type: {chart_type}")
                 return False
             
-            # Check column existence
-            if 'x_column' in config and config['x_column']:
-                if config['x_column'] not in data.columns:
-                    return False
+            # Check if transformation is specified - if so, skip column existence checks
+            # as the columns will be created during transformation
+            has_transformation = config.get('transformation') and config['transformation'].strip()
+            print(f"DEBUG: Has transformation: {has_transformation}")
             
-            if 'y_column' in config and config['y_column']:
-                if config['y_column'] not in data.columns:
-                    return False
+            if not has_transformation:
+                # Check column existence only if no transformation is specified
+                if 'x_column' in config and config['x_column']:
+                    if config['x_column'] not in data.columns:
+                        print(f"DEBUG: Validation failed - x_column '{config['x_column']}' not in data columns: {list(data.columns)}")
+                        return False
+                
+                if 'y_column' in config and config['y_column']:
+                    if config['y_column'] not in data.columns:
+                        print(f"DEBUG: Validation failed - y_column '{config['y_column']}' not in data columns: {list(data.columns)}")
+                        return False
+            else:
+                print("DEBUG: Skipping column existence check due to transformation")
             
             # Type-specific validation
             if chart_type in ['scatter', 'line'] and not (config.get('x_column') and config.get('y_column')):
+                print(f"DEBUG: Validation failed - {chart_type} requires both x_column and y_column")
                 return False
             
             if chart_type in ['histogram', 'pie', 'box'] and not config.get('x_column'):
+                print(f"DEBUG: Validation failed - {chart_type} requires x_column")
                 return False
             
+            print("DEBUG: Chart config validation passed")
             return True
             
-        except Exception:
+        except Exception as e:
+            print(f"DEBUG: Validation exception: {e}")
             return False
     
     def _generate_scatter(self, data: pd.DataFrame, config: Dict, language: str) -> str:
@@ -799,33 +1050,53 @@ class ChartService:
         return self._save_and_return_path()
     
     def _generate_bar(self, data: pd.DataFrame, config: Dict, language: str) -> str:
-        """Generate a bar chart."""
+        """Generate a bar chart with AI configuration support."""
         plt.figure(figsize=(10, 6))
         
-        # Find categorical and numeric columns
-        categorical_columns = data.select_dtypes(include=['object', 'category']).columns
-        numeric_columns = data.select_dtypes(include=['number']).columns
+        # Get configuration from AI
+        x_col = config.get('x_column')
+        y_col = config.get('y_column')
+        title = config.get('title', '')
+        xlabel = config.get('xlabel', '')
+        ylabel = config.get('ylabel', '')
         
-        if len(categorical_columns) == 0 or len(numeric_columns) == 0:
-            raise ValueError("Need both categorical and numeric columns for bar chart")
+        print(f"DEBUG: Bar chart config - x_column: {x_col}, y_column: {y_col}")
         
-        cat_col = categorical_columns[0]
-        num_col = numeric_columns[0]
-        
-        # Group by categorical column and sum numeric values
-        grouped_data = data.groupby(cat_col)[num_col].sum()
-        
-        plt.bar(grouped_data.index, grouped_data.values)
-        
-        # Set labels based on language
-        if language == 'pt_BR':
-            plt.title(f'Gráfico de Barras: {num_col} por {cat_col}')
-            plt.xlabel(cat_col)
-            plt.ylabel(num_col)
+        # If we have both x and y columns specified, use them directly
+        if x_col and y_col and x_col in data.columns and y_col in data.columns:
+            print(f"DEBUG: Using specified columns: {x_col}, {y_col}")
+            plt.bar(data[x_col], data[y_col])
+            
+            plt.title(title or f'{y_col} by {x_col}')
+            plt.xlabel(xlabel or x_col)
+            plt.ylabel(ylabel or y_col)
+            
+        # If only x_column is specified, count occurrences
+        elif x_col and x_col in data.columns:
+            print(f"DEBUG: Counting occurrences for column: {x_col}")
+            grouped_data = data[x_col].value_counts().sort_index()
+            plt.bar(grouped_data.index, grouped_data.values)
+            
+            plt.title(title or f'Count by {x_col}')
+            plt.xlabel(xlabel or x_col)
+            plt.ylabel(ylabel or ('Contagem' if language == 'pt_BR' else 'Count'))
+            
         else:
-            plt.title(f'Bar Chart: {num_col} by {cat_col}')
-            plt.xlabel(cat_col)
-            plt.ylabel(num_col)
+            # Fallback to automatic column selection
+            print("DEBUG: Using automatic column selection")
+            categorical_columns = data.select_dtypes(include=['object', 'category']).columns
+            numeric_columns = data.select_dtypes(include=['number']).columns
+            
+            if len(categorical_columns) > 0:
+                cat_col = categorical_columns[0]
+                grouped_data = data.groupby(cat_col).size()
+                plt.bar(grouped_data.index, grouped_data.values)
+                
+                plt.title(title or f'Count by {cat_col}')
+                plt.xlabel(xlabel or cat_col)
+                plt.ylabel(ylabel or ('Contagem' if language == 'pt_BR' else 'Count'))
+            else:
+                raise ValueError("No suitable columns found for bar chart")
         
         plt.xticks(rotation=45)
         plt.grid(True, alpha=0.3)

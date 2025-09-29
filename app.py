@@ -47,6 +47,12 @@ if 'analysis_results' not in st.session_state:
     st.session_state.analysis_results = None
 if 'suggested_charts' not in st.session_state:
     st.session_state.suggested_charts = None
+if 'conversation_history' not in st.session_state:
+    st.session_state.conversation_history = []
+if 'current_file_name' not in st.session_state:
+    st.session_state.current_file_name = None
+if 'generated_chart_path' not in st.session_state:
+    st.session_state.generated_chart_path = None
 
 # Create a sidebar for settings
 with st.sidebar:
@@ -115,6 +121,9 @@ if uploaded_file is not None:
             # Reset chart suggestions for new file
             st.session_state.suggested_charts = None
             
+            # Reset conversation history for new file
+            st.session_state.conversation_history = []
+            
             # Generate AI-powered initial analysis using Insight Agent
             with st.spinner(lang.get("generating_analysis", "Generating initial analysis...")):
                 from agents.insight_agent import InsightAgent
@@ -157,12 +166,23 @@ if uploaded_file is not None:
         
         with tab1:
             if suggested_charts:
-                selected_graph = st.selectbox(
-                    lang.get("select_graph", "Select a graph to display:"), 
-                    list(suggested_charts.keys()), 
-                    format_func=lambda x: suggested_charts[x],
-                    key="ai_suggested_chart"
-                )
+                # Display chart suggestions with refresh button
+                col1, col2 = st.columns([4, 1])
+                
+                with col1:
+                    selected_graph = st.selectbox(
+                        lang.get("select_graph", "Select a graph to display:"), 
+                        list(suggested_charts.keys()), 
+                        format_func=lambda x: suggested_charts[x],
+                        key="ai_suggested_chart"
+                    )
+                
+                with col2:
+                    if st.button("🔄", help=lang.get("refresh_suggestions", "Get new suggestions"), key="refresh_suggestions"):
+                        # Force refresh of chart suggestions
+                        with st.spinner(lang.get("getting_new_suggestions", "Getting new suggestions...")):
+                            st.session_state.suggested_charts = chart_service.get_ai_suggested_charts(st.session_state.data, st.session_state.language)
+                            st.rerun()
             else:
                 # Fallback to default options if AI suggestions fail
                 graph_options = {
@@ -175,11 +195,38 @@ if uploaded_file is not None:
                                              format_func=lambda x: graph_options[x],
                                              key="fallback_chart")
             
-            if st.button(lang.get("generate_graph", "Generate Graph"), key="generate_ai_chart"):
+            # Generate and Download buttons
+            col1, col2 = st.columns([3, 1])
+            
+            with col1:
+                generate_clicked = st.button(lang.get("generate_graph", "Generate Graph"), key="generate_ai_chart")
+            
+            with col2:
+                if st.session_state.generated_chart_path and os.path.exists(st.session_state.generated_chart_path):
+                    with open(st.session_state.generated_chart_path, "rb") as file:
+                        st.download_button(
+                            label="📥",
+                            data=file.read(),
+                            file_name=f"chart_{selected_graph}.png",
+                            mime="image/png",
+                            help=lang.get("download_chart", "Download chart"),
+                            key="download_ai_chart"
+                        )
+            
+            if generate_clicked:
                 with st.spinner(lang.get("generating_graph", "Generating graph...")):
                     try:
                         graph_path = chart_service.generate_graph(st.session_state.data, selected_graph, st.session_state.language)
+                        st.session_state.generated_chart_path = graph_path
                         st.image(graph_path)
+                        
+                        # Add to conversation history
+                        if selected_graph in suggested_charts:
+                            description = suggested_charts[selected_graph]
+                        else:
+                            description = selected_graph
+                        st.session_state.conversation_history.append(f"Generated chart: {description}")
+                        
                     except Exception as e:
                         st.error(f"Error generating graph: {str(e)}")
                         st.info(lang.get("graph_error_info", "Please try a different chart type or check your data format."))
@@ -192,14 +239,48 @@ if uploaded_file is not None:
                 key="manual_chart_input"
             )
             
-            if st.button(lang.get("generate_custom_graph", "Generate Custom Graph"), key="generate_custom_chart"):
+            # Generate and Download buttons for custom charts
+            col1, col2 = st.columns([3, 1])
+            
+            with col1:
+                generate_custom_clicked = st.button(lang.get("generate_custom_graph", "Generate Custom Graph"), key="generate_custom_chart")
+            
+            with col2:
+                if st.session_state.generated_chart_path and os.path.exists(st.session_state.generated_chart_path):
+                    with open(st.session_state.generated_chart_path, "rb") as file:
+                        st.download_button(
+                            label="📥",
+                            data=file.read(),
+                            file_name="custom_chart.png",
+                            mime="image/png",
+                            help=lang.get("download_chart", "Download chart"),
+                            key="download_custom_chart"
+                        )
+            
+            if generate_custom_clicked:
                 if not manual_chart_input.strip():
                     st.error(lang.get("custom_chart_validation_error", "Please describe the type of chart you want to generate."))
                 else:
                     with st.spinner(lang.get("generating_graph", "Generating graph...")):
                         try:
-                            graph_path = chart_service.generate_custom_chart(st.session_state.data, manual_chart_input, st.session_state.language)
+                            # Pass conversation history to custom chart generation
+                            graph_path = chart_service.generate_custom_chart(
+                                st.session_state.data, 
+                                manual_chart_input, 
+                                st.session_state.language,
+                                st.session_state.conversation_history
+                            )
+                            st.session_state.generated_chart_path = graph_path
+                            
+                            # Display the chart in the custom tab (tab2)
                             st.image(graph_path)
+                            
+                            # Add to conversation history
+                            st.session_state.conversation_history.append(f"Custom chart request: {manual_chart_input}")
+                            
+                            # Success message to confirm chart generation
+                            st.success(lang.get("custom_chart_generated", "Custom chart generated successfully!"))
+                            
                         except Exception as e:
                             st.error(f"Error generating custom graph: {str(e)}")
                             st.info(lang.get("graph_error_info", "Please try a different chart type or check your data format."))
@@ -209,9 +290,10 @@ if uploaded_file is not None:
         user_query = st.text_input(lang["enter_question"], placeholder="Ask a question about the data...")
         
         if user_query:
-            # Check if query is related to the data
-            if not is_data_analysis_question(user_query):
-                st.warning(lang.get("related_questions_warning", "Please ask questions related to the imported CSV file and fraud detection."))
+            # Check if query is related to the data using current dataset context
+            data_columns = list(st.session_state.data.columns) if st.session_state.data is not None else None
+            if not is_data_analysis_question(user_query, data_columns):
+                st.warning(lang.get("related_questions_warning", "Please ask questions related to the imported CSV file and its data."))
             else:
                 with st.spinner(lang["processing_query"]):
                     response, insights = coordinator.process_query(user_query)
