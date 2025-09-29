@@ -1,6 +1,6 @@
 # 🔮 DataVision AI - Análise Inteligente de Dados
 
-A sophisticated multi-agent application that uses Google AI (Gemini) to parse CSV files and provide intelligent data analysis with natural language queries. Features advanced data analysis capabilities, multilingual support, and comprehensive data visualization for any type of dataset.
+A sophisticated multi-agent application that uses Google AI (Gemini) to parse CSV files and provide intelligent data analysis with natural language queries. Features advanced data analysis capabilities, multilingual support, comprehensive data visualization, and a modern responsive UI with full dark mode support.
 
 ## ✨ Features
 
@@ -19,6 +19,14 @@ A sophisticated multi-agent application that uses Google AI (Gemini) to parse CS
 - **💡 Technical Opinions**: Get expert assessments of your dataset quality
 - **🧠 Intelligent Data Sampling**: Smart sampling strategies for large datasets including head/tail, random, and stratified sampling
 - **📋 Data Quality Assessment**: Comprehensive analysis of missing values, duplicates, and data integrity
+
+### UI/UX Features
+- **🎨 Modern Responsive Design**: Beautiful, modern interface with gradient backgrounds and smooth animations
+- **🌙 Full Dark Mode Support**: Automatic dark mode detection with comprehensive styling for all components
+- **📱 Mobile-Friendly**: Responsive design that works seamlessly across all device sizes
+- **🔒 Always-Visible Sidebar**: Persistent sidebar for easy access to settings and navigation
+- **⚡ Enhanced Performance**: Optimized CSS and JavaScript for smooth user experience
+- **🎯 Improved Accessibility**: Better contrast ratios and readable text in both light and dark modes
 
 ### Data Analysis Capabilities
 - **Statistical Analysis**: Mean, median, standard deviation, and distribution analysis
@@ -62,6 +70,23 @@ I2A2_extra/
 ├── EXAMPLE_CSV_FORMAT.md # CSV format documentation
 └── README.md            # This file
 ```
+
+## 🔧 Recent Updates & Improvements
+
+### Version 2.0 - Enhanced UI/UX Experience
+- **✅ Complete Dark Mode Implementation**: Added comprehensive dark mode support with automatic detection using `@media (prefers-color-scheme: dark)`
+- **✅ Sidebar Optimization**: Removed collapsible sidebar functionality and implemented always-visible sidebar for better user experience
+- **✅ Enhanced CSS Architecture**: Implemented modern CSS with CSS variables, gradients, and smooth animations
+- **✅ Improved Accessibility**: Better contrast ratios and text readability in both light and dark themes
+- **✅ Bug Fixes**: Resolved `ai_insights` variable definition issues and improved error handling
+- **✅ Performance Optimization**: Streamlined CSS and removed unnecessary JavaScript for better performance
+
+### Technical Improvements
+- **Modern CSS Variables**: Implemented CSS custom properties for consistent theming
+- **Responsive Design**: Enhanced mobile and tablet compatibility
+- **Error Resolution**: Fixed session state management and variable scoping issues
+- **Code Optimization**: Removed deprecated sidebar toggle functionality
+- **Enhanced Styling**: Improved visual hierarchy and component styling
 
 ## 🚀 Quick Start
 
@@ -238,6 +263,50 @@ The application supports:
 - **No Data Storage**: Files processed in memory, not saved permanently
 - **Session Management**: Secure session state handling
 - **Universal Data Support**: Works with any CSV data without restrictions
+
+## 📋 To Do List - Future Improvements
+
+### High Priority Enhancements
+- [ ] **Database Integration**: Add support for connecting to databases (PostgreSQL, MySQL, SQLite)
+- [ ] **Export Functionality**: Enable exporting analysis results and charts as PDF/Excel reports
+- [ ] **Advanced Chart Types**: Add more visualization options (treemaps, sankey diagrams, geographic maps)
+- [ ] **Data Preprocessing**: Implement data cleaning tools (outlier removal, missing value imputation)
+- [ ] **Batch Processing**: Support for processing multiple CSV files simultaneously
+
+### Medium Priority Features
+- [ ] **User Authentication**: Add user accounts and saved analysis sessions
+- [ ] **Custom Themes**: Allow users to create and save custom color themes
+- [ ] **API Integration**: Connect to external data sources (Google Sheets, APIs, cloud storage)
+- [ ] **Advanced Analytics**: Implement machine learning models for predictive analysis
+- [ ] **Collaboration Features**: Share analysis results and collaborate with team members
+- [ ] **Data Validation Rules**: Custom validation rules for data quality assessment
+- [ ] **Scheduled Reports**: Automated report generation and email delivery
+
+### Low Priority Enhancements
+- [ ] **Plugin System**: Allow third-party extensions and custom analysis modules
+- [ ] **Voice Commands**: Voice-activated data queries and navigation
+- [ ] **Mobile App**: Native mobile application for iOS and Android
+- [ ] **Real-time Data**: Support for streaming data and real-time analysis
+- [ ] **Advanced Permissions**: Role-based access control for enterprise use
+- [ ] **Integration Hub**: Connect with popular business tools (Slack, Teams, Jira)
+- [ ] **AI Model Selection**: Allow users to choose between different AI models
+
+### Technical Improvements
+- [ ] **Performance Optimization**: Implement caching and lazy loading for large datasets
+- [ ] **Error Handling**: Enhanced error messages and recovery mechanisms
+- [ ] **Testing Suite**: Comprehensive unit and integration tests
+- [ ] **Documentation**: Interactive tutorials and comprehensive API documentation
+- [ ] **Monitoring**: Application performance monitoring and analytics
+- [ ] **Accessibility**: WCAG 2.1 AA compliance for better accessibility
+- [ ] **Internationalization**: Support for additional languages (Spanish, French, German)
+
+### Infrastructure & DevOps
+- [ ] **Docker Support**: Containerization for easy deployment
+- [ ] **Cloud Deployment**: One-click deployment to AWS, GCP, Azure
+- [ ] **CI/CD Pipeline**: Automated testing and deployment workflows
+- [ ] **Load Balancing**: Support for high-traffic scenarios
+- [ ] **Backup & Recovery**: Automated backup systems for user data
+- [ ] **Security Audit**: Regular security assessments and penetration testing
 
 ## 🐛 Troubleshooting
 

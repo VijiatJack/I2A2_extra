@@ -208,6 +208,29 @@ st.markdown("""
         background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     }
     
+    /* Force sidebar to always be visible */
+    section[data-testid="stSidebar"] {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 21rem !important;
+        min-width: 21rem !important;
+        max-width: 21rem !important;
+        transform: none !important;
+        transition: none !important;
+    }
+    
+    /* Hide sidebar collapse button */
+    button[kind="header"][data-testid="baseButton-header"] {
+        display: none !important;
+    }
+    
+    /* Ensure main content adjusts properly */
+    .main .block-container {
+        margin-left: 0 !important;
+        padding-left: 1rem !important;
+    }
+    
     /* Dataframe styling */
     .stDataFrame {
         border-radius: var(--border-radius);
