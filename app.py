@@ -198,48 +198,14 @@ st.markdown("""
         border-radius: var(--border-radius);
     }
     
-    /* Sidebar styling and toggle functionality */
+    /* Sidebar styling */
     .css-1d391kg {
         background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     }
     
-    /* Sidebar toggle button */
-    .sidebar-toggle {
-        position: fixed;
-        top: 1rem;
-        left: 1rem;
-        z-index: 1000;
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        font-size: 1.2rem;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .sidebar-toggle:hover {
-        background: var(--secondary-color);
-        transform: scale(1.1);
-        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
-    }
-    
-    /* Hide sidebar when collapsed */
-    .sidebar-hidden .css-1d391kg {
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-    }
-    
-    /* Adjust main content when sidebar is hidden */
-    .sidebar-hidden .main .block-container {
-        margin-left: 0;
-        transition: margin-left 0.3s ease;
+    /* Updated sidebar selectors for current Streamlit version */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     }
     
     /* Dataframe styling */
@@ -293,6 +259,177 @@ st.markdown("""
         animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
     
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        /* Dark mode color variables */
+        :root {
+            --primary-color: #818cf8;
+            --secondary-color: #a78bfa;
+            --accent-color: #22d3ee;
+            --success-color: #34d399;
+            --warning-color: #fbbf24;
+            --error-color: #f87171;
+            --background-gradient: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #334155;
+            --border-color: #475569;
+        }
+        
+        /* Main app background */
+        .stApp {
+            background-color: var(--bg-primary) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        /* Sidebar dark mode */
+        section[data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #1e293b 0%, #334155 100%) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        section[data-testid="stSidebar"] * {
+            color: var(--text-primary) !important;
+        }
+        
+        section[data-testid="stSidebar"] .stSelectbox label,
+        section[data-testid="stSidebar"] .stRadio label,
+        section[data-testid="stSidebar"] .stCheckbox label,
+        section[data-testid="stSidebar"] h1,
+        section[data-testid="stSidebar"] h2,
+        section[data-testid="stSidebar"] h3,
+        section[data-testid="stSidebar"] h4,
+        section[data-testid="stSidebar"] p,
+        section[data-testid="stSidebar"] div {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Custom header dark mode */
+        .custom-header {
+            background: var(--background-gradient);
+            color: var(--text-primary);
+        }
+        
+        /* Card styling dark mode */
+        .custom-card {
+            background: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        .custom-card h3,
+        .custom-card h4,
+        .custom-card p,
+        .custom-card div {
+            color: var(--text-primary) !important;
+        }
+        
+        /* AI Analysis response dark mode */
+        div[style*="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)"] {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+            border-left: 4px solid var(--accent-color) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        div[style*="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)"] {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+            border-left: 4px solid var(--success-color) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        div[style*="background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)"] {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+            border-left: 4px solid var(--warning-color) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        /* Chart Generation Options headers dark mode */
+        .stTabs [data-baseweb="tab-list"] {
+            background: var(--bg-secondary) !important;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+            background: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        .stTabs [aria-selected="true"] {
+            background: var(--primary-color) !important;
+            color: white !important;
+        }
+        
+        /* Metric containers dark mode */
+        .metric-container {
+            background: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        .metric-label {
+            color: var(--text-secondary) !important;
+        }
+        
+        /* File uploader dark mode */
+        .stFileUploader > div > div {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%) !important;
+            border: 2px dashed var(--primary-color) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        /* Input fields dark mode */
+        .stSelectbox > div > div,
+        .stTextInput > div > div > input,
+        .stTextArea > div > div > textarea {
+            background-color: var(--bg-card) !important;
+            border: 2px solid var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        /* Welcome section dark mode */
+        div[style*="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)"] {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        div[style*="background: white; padding: 1.5rem; border-radius: 8px"] {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        /* General text color fixes */
+        .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6 {
+            color: var(--text-primary) !important;
+        }
+        
+        .stApp p, .stApp div, .stApp span {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Dataframe dark mode */
+        .stDataFrame {
+            background: var(--bg-card) !important;
+        }
+        
+        .stDataFrame table {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        .stDataFrame th {
+            background: var(--bg-secondary) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        .stDataFrame td {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+        }
+    }
+    
     /* Responsive design */
     @media (max-width: 768px) {
         .custom-header h1 {
@@ -306,56 +443,7 @@ st.markdown("""
     }
 </style>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Create sidebar toggle button
-    const toggleButton = document.createElement('button');
-    toggleButton.className = 'sidebar-toggle';
-    toggleButton.innerHTML = '☰';
-    toggleButton.title = 'Toggle Sidebar';
-    
-    // Add button to page
-    document.body.appendChild(toggleButton);
-    
-    // Track sidebar state
-    let sidebarHidden = false;
-    
-    // Toggle function
-    function toggleSidebar() {
-        sidebarHidden = !sidebarHidden;
-        
-        if (sidebarHidden) {
-            document.body.classList.add('sidebar-hidden');
-            toggleButton.innerHTML = '→';
-            toggleButton.style.left = '1rem';
-        } else {
-            document.body.classList.remove('sidebar-hidden');
-            toggleButton.innerHTML = '☰';
-            toggleButton.style.left = '1rem';
-        }
-    }
-    
-    // Add click event
-    toggleButton.addEventListener('click', toggleSidebar);
-    
-    // Handle Streamlit rerun
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'childList') {
-                // Re-add button if it was removed during rerun
-                if (!document.querySelector('.sidebar-toggle')) {
-                    document.body.appendChild(toggleButton);
-                }
-            }
-        });
-    });
-    
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-});
-</script>
+
 
 """, unsafe_allow_html=True)
 
@@ -582,7 +670,7 @@ if uploaded_file is not None:
             ai_insights = st.session_state.analysis_results.get('ai_insights', '')
             if ai_insights:
                 st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+                <div style="background: var(--background-gradient); 
                            padding: 1.5rem; border-radius: 12px; border-left: 4px solid #06b6d4; 
                            margin-bottom: 1rem;">
                     {ai_insights}
@@ -776,7 +864,7 @@ if uploaded_file is not None:
                 
                 # Display response in styled containers
                 st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
+                <div style="background: var(--background-gradient); 
                            padding: 1.5rem; border-radius: 12px; border-left: 4px solid #10b981; 
                            margin: 1rem 0;">
                     <h4 style="color: #065f46; margin: 0 0 1rem 0; display: flex; align-items: center;">
@@ -789,7 +877,7 @@ if uploaded_file is not None:
                 # Display additional insights if available
                 if insights:
                     st.markdown(f"""
-                    <div style="background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%); 
+                    <div style="background: var(--background-gradient); 
                                padding: 1.5rem; border-radius: 12px; border-left: 4px solid #f59e0b; 
                                margin: 1rem 0;">
                         <h4 style="color: #92400e; margin: 0 0 1rem 0; display: flex; align-items: center;">
@@ -801,7 +889,7 @@ if uploaded_file is not None:
 else:
     # Welcome screen for new users
     st.markdown(f"""
-    <div style="text-align: center; padding: 3rem 2rem; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); 
+    <div style="text-align: center; padding: 3rem 2rem; background: var(--background-gradient); 
                 border-radius: 12px; margin: 2rem 0;">
         <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
         <h2 style="color: #374151; margin-bottom: 1rem;">{lang['welcome_title']}</h2>
@@ -831,7 +919,7 @@ else:
 # Add footer with enhanced styling
 st.markdown("---")
 st.markdown(f"""
-<div style="text-align: center; padding: 2rem 0; color: #6b7280; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); 
+<div style="text-align: center; padding: 2rem 0; color: #6b7280; background: var(--background-gradient); 
            border-radius: 12px; margin-top: 2rem;">
     <p style="margin: 0; font-size: 0.9rem;">{lang["footer"]}</p>
     <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; opacity: 0.7;">
