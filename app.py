@@ -23,10 +23,341 @@ if not os.getenv("GEMINI_API_KEY"):
 
 # Set page configuration
 st.set_page_config(
-    page_title="DataVision AI - Análise Inteligente de Dados",
-    page_icon="🔮",
-    layout="wide"
+    page_title="DataVision AI",  # Keep simple since language isn't determined yet
+     page_icon="🔮",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
+
+# Custom CSS for modern styling and sidebar toggle
+st.markdown("""
+<style>
+    /* Main theme colors */
+    :root {
+        --primary-color: #6366f1;
+        --secondary-color: #8b5cf6;
+        --accent-color: #06b6d4;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --error-color: #ef4444;
+        --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        --border-radius: 12px;
+    }
+    
+    /* Hide Streamlit branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Main container styling */
+    .main .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        max-width: 1200px;
+    }
+    
+    /* Custom header styling */
+    .custom-header {
+        background: var(--background-gradient);
+        padding: 2rem;
+        border-radius: var(--border-radius);
+        margin-bottom: 2rem;
+        text-align: center;
+        color: white;
+        box-shadow: var(--card-shadow);
+    }
+    
+    .custom-header h1 {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .custom-header p {
+        margin: 1rem 0 0 0;
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+    
+    /* Card styling */
+    .custom-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        margin-bottom: 1.5rem;
+        border: 1px solid #e5e7eb;
+    }
+    
+    /* File uploader styling */
+    .stFileUploader > div > div {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 2px dashed var(--primary-color);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .stFileUploader > div > div:hover {
+        border-color: var(--secondary-color);
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    .stButton > button:hover {
+        background: var(--secondary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    }
+    
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background: #f8fafc;
+        padding: 0.5rem;
+        border-radius: var(--border-radius);
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background: white;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    /* Selectbox styling */
+    .stSelectbox > div > div {
+        border-radius: var(--border-radius);
+        border: 2px solid #e5e7eb;
+        transition: border-color 0.3s ease;
+    }
+    
+    .stSelectbox > div > div:focus-within {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    /* Text input styling */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea {
+        border-radius: var(--border-radius);
+        border: 2px solid #e5e7eb;
+        transition: border-color 0.3s ease;
+    }
+    
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    /* Success/Error message styling */
+    .stSuccess {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        border: 1px solid var(--success-color);
+        border-radius: var(--border-radius);
+    }
+    
+    .stError {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        border: 1px solid var(--error-color);
+        border-radius: var(--border-radius);
+    }
+    
+    .stWarning {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 1px solid var(--warning-color);
+        border-radius: var(--border-radius);
+    }
+    
+    .stInfo {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border: 1px solid var(--accent-color);
+        border-radius: var(--border-radius);
+    }
+    
+    /* Sidebar styling and toggle functionality */
+    .css-1d391kg {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    
+    /* Sidebar toggle button */
+    .sidebar-toggle {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1000;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .sidebar-toggle:hover {
+        background: var(--secondary-color);
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    }
+    
+    /* Hide sidebar when collapsed */
+    .sidebar-hidden .css-1d391kg {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    /* Adjust main content when sidebar is hidden */
+    .sidebar-hidden .main .block-container {
+        margin-left: 0;
+        transition: margin-left 0.3s ease;
+    }
+    
+    /* Dataframe styling */
+    .stDataFrame {
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+    }
+    
+    /* Spinner styling */
+    .stSpinner > div {
+        border-top-color: var(--primary-color) !important;
+    }
+    
+    /* Progress bar styling */
+    .stProgress > div > div {
+        background: var(--primary-color);
+        border-radius: var(--border-radius);
+    }
+    
+    /* Metric styling */
+    .metric-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        text-align: center;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    /* Animation for loading states */
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    .loading-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .custom-header h1 {
+            font-size: 2rem;
+        }
+        
+        .main .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Create sidebar toggle button
+    const toggleButton = document.createElement('button');
+    toggleButton.className = 'sidebar-toggle';
+    toggleButton.innerHTML = '☰';
+    toggleButton.title = 'Toggle Sidebar';
+    
+    // Add button to page
+    document.body.appendChild(toggleButton);
+    
+    // Track sidebar state
+    let sidebarHidden = false;
+    
+    // Toggle function
+    function toggleSidebar() {
+        sidebarHidden = !sidebarHidden;
+        
+        if (sidebarHidden) {
+            document.body.classList.add('sidebar-hidden');
+            toggleButton.innerHTML = '→';
+            toggleButton.style.left = '1rem';
+        } else {
+            document.body.classList.remove('sidebar-hidden');
+            toggleButton.innerHTML = '☰';
+            toggleButton.style.left = '1rem';
+        }
+    }
+    
+    // Add click event
+    toggleButton.addEventListener('click', toggleSidebar);
+    
+    // Handle Streamlit rerun
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                // Re-add button if it was removed during rerun
+                if (!document.querySelector('.sidebar-toggle')) {
+                    document.body.appendChild(toggleButton);
+                }
+            }
+        });
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+});
+</script>
+
+""", unsafe_allow_html=True)
 
 # Initialize services
 data_service = DataService()
@@ -36,9 +367,14 @@ file_service = FileService()
 # Initialize the coordinator agent
 coordinator = CoordinatorAgent()
 
-# Initialize session state
+# Initialize session state first
 if 'language' not in st.session_state:
     st.session_state.language = DEFAULT_LANGUAGE
+
+# Get current language dictionary early
+lang = LANGUAGES[st.session_state.language]
+
+# Continue with other session state initialization
 if 'data' not in st.session_state:
     st.session_state.data = None
 if 'file_processed' not in st.session_state:
@@ -58,7 +394,7 @@ if 'generated_chart_path' not in st.session_state:
 with st.sidebar:
     # Language selector
     selected_language = st.selectbox(
-        "Idioma / Language",
+        "🌐 Language / Idioma",
         options=["Português (Brasil)", "English (US)"],
         index=0 if st.session_state.language == "pt_BR" else 1
     )
@@ -67,19 +403,67 @@ with st.sidebar:
     if selected_language == "Português (Brasil)" and st.session_state.language != "pt_BR":
         st.session_state.language = "pt_BR"
         st.session_state.suggested_charts = None  # Reset charts for new language
+        st.rerun()  # Rerun to update lang variable
     elif selected_language == "English (US)" and st.session_state.language != "en_US":
         st.session_state.language = "en_US"
         st.session_state.suggested_charts = None  # Reset charts for new language
+        st.rerun()  # Rerun to update lang variable
 
-# Get current language dictionary
-lang = LANGUAGES[st.session_state.language]
+    # Update lang variable after potential language change
+    lang = LANGUAGES[st.session_state.language]
 
-# App title and description
-st.title(lang["app_title"])
-st.markdown(lang["app_description"])
+    # Add settings header and help section
+    st.markdown(f"""
+    <div style="text-align: center; padding: 1rem; margin-bottom: 1rem;">
+        <h2 style="color: #6366f1; margin: 0;">{lang['settings_title']}</h2>
+        <p style="color: #6b7280; font-size: 0.9rem; margin: 0.5rem 0 0 0;">{lang['settings_subtitle']}</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Update language selector help text
+    st.markdown(f"<small>{lang['language_help']}</small>", unsafe_allow_html=True)
+    
+    # Add help section in sidebar
+    st.markdown("---")
+    st.markdown(f"### {lang['help_section_title']}")
+    st.markdown(f"""
+    {lang['help_step_1']}
+    
+    {lang['help_step_2']}
+    
+    {lang['help_step_3']}
+    
+    {lang['help_step_4']}
+    """)
+    st.markdown("---")
 
-# File uploader
-uploaded_file = st.file_uploader(lang["file_uploader"], type=["csv"])
+
+
+# App title and description with custom styling
+st.markdown(f"""
+<div class="custom-header">
+    <h1>{lang["app_title"]}</h1>
+    <p>{lang["app_description"].replace('**DataVision AI**', 'DataVision AI').strip()}</p>
+</div>
+""", unsafe_allow_html=True)
+
+# File uploader with enhanced styling
+st.markdown(f"""
+<div class="custom-card">
+    <h3 style="color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+        {lang['upload_data_title']}
+        <span style="margin-left: 0.5rem; font-size: 0.8rem; color: #6b7280; font-weight: normal;">
+            {lang['upload_data_subtitle']}
+        </span>
+    </h3>
+</div>
+""", unsafe_allow_html=True)
+
+uploaded_file = st.file_uploader(
+    lang["file_uploader"], 
+    type=["csv"],
+    help=lang['upload_help']
+)
 
 if uploaded_file is not None:
     # Only process the file if it hasn't been processed yet or if it's a new file
@@ -91,14 +475,49 @@ if uploaded_file is not None:
         file_needs_processing = True
         
     if file_needs_processing:
-        # Display file details
+        # Display file details in a styled card
+        st.markdown(f"""
+        <div class="custom-card">
+            <h4 style="color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+                📋 {lang['file_info_title']}
+            </h4>
+        </div>
+        """, unsafe_allow_html=True)
+        
         file_details = {
             lang["filename"]: uploaded_file.name, 
             lang["filetype"]: uploaded_file.type, 
             lang["filesize"]: f"{uploaded_file.size / 1024:.2f} KB"
         }
-        st.write(lang["file_details"])
-        st.write(file_details)
+        
+        # Create columns for file details
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown(f"""
+            <div class="metric-container">
+                <div class="metric-value">📄</div>
+                <div class="metric-label">{lang["filename"]}</div>
+                <div style="font-weight: 600; color: #374151; margin-top: 0.5rem;">{uploaded_file.name}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f"""
+            <div class="metric-container">
+                <div class="metric-value">🗂️</div>
+                <div class="metric-label">{lang["filetype"]}</div>
+                <div style="font-weight: 600; color: #374151; margin-top: 0.5rem;">{uploaded_file.type}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(f"""
+            <div class="metric-container">
+                <div class="metric-value">📏</div>
+                <div class="metric-label">{lang["filesize"]}</div>
+                <div style="font-weight: 600; color: #374151; margin-top: 0.5rem;">{uploaded_file.size / 1024:.2f} KB</div>
+            </div>
+            """, unsafe_allow_html=True)
         
         # Process the file with a loading spinner
         with st.spinner(lang["processing"]):
@@ -125,7 +544,7 @@ if uploaded_file is not None:
             st.session_state.conversation_history = []
             
             # Generate AI-powered initial analysis using Insight Agent
-            with st.spinner(lang.get("generating_analysis", "Generating initial analysis...")):
+            with st.spinner("🧠 " + lang.get("generating_analysis", "Generating initial analysis...")):
                 from agents.insight_agent import InsightAgent
                 insight_agent = InsightAgent()
                 ai_analysis = insight_agent.process(data_preview, operation='initial_analysis', language=st.session_state.language)
@@ -133,30 +552,63 @@ if uploaded_file is not None:
     
     # If file is processed successfully, display analysis and allow queries
     if st.session_state.file_processed and st.session_state.data is not None:
-        # Display a preview of the data
-        st.subheader(lang["data_preview"])
-        st.dataframe(st.session_state.data.head())
+        # Data preview section
+        st.markdown(f"""
+        <div class="custom-card">
+            <h3 style="color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+                {lang['data_preview_title']}
+                <span style="margin-left: 0.5rem; font-size: 0.8rem; color: #6b7280; font-weight: normal;">
+                    {lang['data_preview_subtitle']}
+                </span>
+            </h3>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Display AI-powered initial analysis
+        st.dataframe(st.session_state.data.head(), use_container_width=True)
+        
+        # Analysis results section
         if st.session_state.analysis_results:
-            st.subheader(lang.get("initial_analysis", "Initial Analysis"))
+            st.markdown(f"""
+            <div class="custom-card">
+                <h3 style="color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+                    {lang['ai_analysis_title']}
+                    <span style="margin-left: 0.5rem; font-size: 0.8rem; color: #6b7280; font-weight: normal;">
+                        {lang['ai_analysis_subtitle']}
+                    </span>
+                </h3>
+            </div>
+            """, unsafe_allow_html=True)
             
-            # Display AI-generated insights
             ai_insights = st.session_state.analysis_results.get('ai_insights', '')
             if ai_insights:
-                st.write(ai_insights)
+                st.markdown(f"""
+                <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+                           padding: 1.5rem; border-radius: 12px; border-left: 4px solid #06b6d4; 
+                           margin-bottom: 1rem;">
+                    {ai_insights}
+                </div>
+                """, unsafe_allow_html=True)
             else:
-                st.info("No analysis available yet.")
+                st.info(lang['info_box_message'])
         
         # Visualization section
-        st.subheader(lang.get("visualization", "Visualization"))
+        st.markdown(f"""
+        <div class="custom-card">
+            <h3 style="color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+                {lang['visualization_title']}
+                <span style="margin-left: 0.5rem; font-size: 0.8rem; color: #6b7280; font-weight: normal;">
+                    {lang['visualization_subtitle']}
+                </span>
+            </h3>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Chart generation options
         st.write(lang.get("chart_generation_options", "Chart Generation Options"))
         
         # Get AI-suggested charts (cache in session state to avoid re-fetching)
         if 'suggested_charts' not in st.session_state or st.session_state.suggested_charts is None:
-            with st.spinner(lang.get("analyzing_data", "Analyzing data for chart suggestions...")):
+            with st.spinner("🤖 " + lang.get("analyzing_data", "Analyzing data for chart suggestions...")):
                 st.session_state.suggested_charts = chart_service.get_ai_suggested_charts(st.session_state.data, st.session_state.language)
         
         suggested_charts = st.session_state.suggested_charts
@@ -193,13 +645,18 @@ if uploaded_file is not None:
                 selected_graph = st.selectbox(lang.get("select_graph", "Select a graph to display:"), 
                                              list(graph_options.keys()), 
                                              format_func=lambda x: graph_options[x],
-                                             key="fallback_chart")
+                                             key="fallback_chart",
+                                             help=lang['fallback_chart_help'])
             
             # Generate and Download buttons
             col1, col2 = st.columns([3, 1])
             
             with col1:
-                generate_clicked = st.button(lang.get("generate_graph", "Generate Graph"), key="generate_ai_chart")
+                generate_clicked = st.button(
+                    lang.get("generate_graph", "Generate Graph"), 
+                    key="generate_ai_chart",
+                    help=lang['generate_ai_help']
+                )
             
             with col2:
                 if st.session_state.generated_chart_path and os.path.exists(st.session_state.generated_chart_path):
@@ -214,7 +671,7 @@ if uploaded_file is not None:
                         )
             
             if generate_clicked:
-                with st.spinner(lang.get("generating_graph", "Generating graph...")):
+                with st.spinner("📊 " + lang.get("generating_graph", "Generating graph...")):
                     try:
                         graph_path = chart_service.generate_graph(st.session_state.data, selected_graph, st.session_state.language)
                         st.session_state.generated_chart_path = graph_path
@@ -234,16 +691,21 @@ if uploaded_file is not None:
         with tab2:
             manual_chart_input = st.text_area(
                 lang.get("manual_chart_option", "Or manually enter the desired chart type:"),
-                placeholder=lang.get("manual_chart_placeholder", "Ex: histogram of Amount column, scatter plot between X and Y..."),
+                placeholder=lang.get("manual_chart_placeholder", "💡 Examples: histogram of Amount column, scatter plot between V1 and V2, correlation heatmap, box plot for outliers..."),
                 height=100,
-                key="manual_chart_input"
+                key="manual_chart_input",
+                help=lang['manual_chart_help']
             )
             
             # Generate and Download buttons for custom charts
             col1, col2 = st.columns([3, 1])
             
             with col1:
-                generate_custom_clicked = st.button(lang.get("generate_custom_graph", "Generate Custom Graph"), key="generate_custom_chart")
+                generate_custom_clicked = st.button(
+                    lang.get("generate_custom_graph", "Generate Custom Graph"), 
+                    key="generate_custom_chart",
+                    help=lang['generate_custom_help']
+                )
             
             with col2:
                 if st.session_state.generated_chart_path and os.path.exists(st.session_state.generated_chart_path):
@@ -261,7 +723,7 @@ if uploaded_file is not None:
                 if not manual_chart_input.strip():
                     st.error(lang.get("custom_chart_validation_error", "Please describe the type of chart you want to generate."))
                 else:
-                    with st.spinner(lang.get("generating_graph", "Generating graph...")):
+                    with st.spinner("🎨 " + lang.get("generating_graph", "Generating graph...")):
                         try:
                             # Pass conversation history to custom chart generation
                             graph_path = chart_service.generate_custom_chart(
@@ -285,9 +747,23 @@ if uploaded_file is not None:
                             st.error(f"Error generating custom graph: {str(e)}")
                             st.info(lang.get("graph_error_info", "Please try a different chart type or check your data format."))
         
-        # User query section
-        st.subheader(lang["ask_questions"])
-        user_query = st.text_input(lang["enter_question"], placeholder="Ask a question about the data...")
+        # Questions section
+        st.markdown(f"""
+        <div class="custom-card">
+            <h3 style="color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+                {lang['questions_title']}
+                <span style="margin-left: 0.5rem; font-size: 0.8rem; color: #6b7280; font-weight: normal;">
+                    {lang['questions_subtitle']}
+                </span>
+            </h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        user_query = st.text_input(
+            lang["enter_question"], 
+            placeholder=lang["question_placeholder"],
+            help=lang['question_help']
+        )
         
         if user_query:
             # Check if query is related to the data using current dataset context
@@ -295,20 +771,71 @@ if uploaded_file is not None:
             if not is_data_analysis_question(user_query, data_columns):
                 st.warning(lang.get("related_questions_warning", "Please ask questions related to the imported CSV file and its data."))
             else:
-                with st.spinner(lang["processing_query"]):
+                with st.spinner("🔄 " + lang["processing_query"]):
                     response, insights = coordinator.process_query(user_query)
                 
-                # Display response
-                st.subheader(lang["response"])
+                # Display response in styled containers
+                st.markdown(f"""
+                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
+                           padding: 1.5rem; border-radius: 12px; border-left: 4px solid #10b981; 
+                           margin: 1rem 0;">
+                    <h4 style="color: #065f46; margin: 0 0 1rem 0; display: flex; align-items: center;">
+                        {lang['ai_response_title']}
+                    </h4>
+                """, unsafe_allow_html=True)
                 st.write(response)
+                st.markdown("</div>", unsafe_allow_html=True)
                 
                 # Display additional insights if available
                 if insights:
-                    st.subheader(lang["additional_insights"])
+                    st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%); 
+                               padding: 1.5rem; border-radius: 12px; border-left: 4px solid #f59e0b; 
+                               margin: 1rem 0;">
+                        <h4 style="color: #92400e; margin: 0 0 1rem 0; display: flex; align-items: center;">
+                            {lang['additional_insights_title']}
+                        </h4>
+                    """, unsafe_allow_html=True)
                     st.write(insights)
+                    st.markdown("</div>", unsafe_allow_html=True)
 else:
-    st.info(lang["upload_prompt"])
+    # Welcome screen for new users
+    st.markdown(f"""
+    <div style="text-align: center; padding: 3rem 2rem; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); 
+                border-radius: 12px; margin: 2rem 0;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
+        <h2 style="color: #374151; margin-bottom: 1rem;">{lang['welcome_title']}</h2>
+        <p style="color: #6b7280; font-size: 1.1rem; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+            {lang['welcome_description']}
+        </p>
+        <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-top: 2rem;">
+            <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 200px;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤖</div>
+                <h4 style="color: #374151; margin: 0 0 0.5rem 0;">{lang['welcome_ai_title']}</h4>
+                <p style="color: #6b7280; font-size: 0.9rem; margin: 0;">{lang['welcome_ai_description']}</p>
+            </div>
+            <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 200px;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📈</div>
+                <h4 style="color: #374151; margin: 0 0 0.5rem 0;">{lang['welcome_charts_title']}</h4>
+                <p style="color: #6b7280; font-size: 0.9rem; margin: 0;">{lang['welcome_charts_description']}</p>
+            </div>
+            <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 200px;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">💬</div>
+                <h4 style="color: #374151; margin: 0 0 0.5rem 0;">{lang['welcome_questions_title']}</h4>
+                <p style="color: #6b7280; font-size: 0.9rem; margin: 0;">{lang['welcome_questions_description']}</p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Add footer
+# Add footer with enhanced styling
 st.markdown("---")
-st.markdown(lang["footer"])
+st.markdown(f"""
+<div style="text-align: center; padding: 2rem 0; color: #6b7280; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); 
+           border-radius: 12px; margin-top: 2rem;">
+    <p style="margin: 0; font-size: 0.9rem;">{lang["footer"]}</p>
+    <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; opacity: 0.7;">
+        {lang['footer_made_with']}
+    </p>
+</div>
+""", unsafe_allow_html=True)
