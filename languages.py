@@ -61,10 +61,11 @@ LANGUAGES = {
         "chart_generation_options": "Opções de Geração de Gráficos"
     },
     "en_US": {
-        "app_title": "CSV AI Parser",
+        "app_title": "🔮 DataVision AI - Intelligent Data Analysis",
         "app_description": """
-        This application uses AI to analyze CSV files and answer questions about the data.
-        Upload a CSV file and ask questions to get insights from your data.
+        **DataVision AI** is your intelligent platform for advanced CSV data analysis.
+        Transform your data into valuable insights with the power of Artificial Intelligence.
+        Upload a CSV file and discover hidden patterns in your data.
         """,
         "language_selector": "Language",
         "file_uploader": "Choose a CSV file",
@@ -82,7 +83,7 @@ LANGUAGES = {
         "response": "Response",
         "additional_insights": "Additional Insights",
         "upload_prompt": "Please upload a CSV file to get started.",
-        "footer": "Powered by Google AI and Streamlit",
+        "footer": "Powered by Google AI and Streamlit | 🔮 DataVision AI",
         "api_key_error": "Please set your GEMINI_API_KEY in a .env file",
         "generating_analysis": "Generating initial analysis... Please wait.",
         "analyzing_data": "Analyzing data for chart suggestions...",

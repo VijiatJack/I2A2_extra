@@ -246,52 +246,9 @@ class ChartService:
         
         self._temp_files.clear()
     
-    def get_supported_chart_types(self) -> dict:
-        """
-        Get supported chart types with descriptions.
-        
-        Returns:
-            dict: Dictionary of chart types and their descriptions
-        """
-        return {
-            'fraud_distribution': 'Fraud vs Regular Distribution',
-            'amount_distribution': 'Amount Distribution',
-            'time_series': 'Transactions Over Time'
-        }
+
     
-    def validate_chart_requirements(self, data: pd.DataFrame, chart_type: str) -> Tuple[bool, str]:
-        """
-        Validate if data meets requirements for the specified chart type.
-        
-        Args:
-            data (pd.DataFrame): Data to validate
-            chart_type (str): Type of chart to validate for
-            
-        Returns:
-            Tuple[bool, str]: (is_valid, error_message)
-        """
-        if data is None or data.empty:
-            return False, "Data cannot be None or empty"
-        
-        if chart_type == 'fraud_distribution':
-            return True, ""  # Can work with any data
-        
-        elif chart_type == 'amount_distribution':
-            amount_columns = [col for col in data.columns if 'amount' in col.lower() or 'value' in col.lower()]
-            numeric_columns = data.select_dtypes(include=['number']).columns
-            
-            if not amount_columns and len(numeric_columns) == 0:
-                return False, "No numeric columns found for amount distribution"
-            return True, ""
-        
-        elif chart_type == 'time_series':
-            time_columns = [col for col in data.columns if 'time' in col.lower() or 'date' in col.lower()]
-            if not time_columns:
-                return False, "No time columns found for time series chart"
-            return True, ""
-        
-        else:
-            return False, f"Unsupported chart type: {chart_type}"
+
     
     def generate_graph(self, data: pd.DataFrame, chart_type: str, language: str = 'en_US') -> str:
         """
@@ -329,8 +286,6 @@ class ChartService:
             Dict[str, str]: Dictionary of chart types and their descriptions
         """
         try:
-            print(f"[DEBUG] Getting AI chart suggestions for data with shape: {data.shape}")
-            
             # Analyze data structure
             data_info = self._analyze_data_structure(data)
             
@@ -373,8 +328,6 @@ class ChartService:
             response = self.model.generate_content(prompt)
             ai_suggestions = self._parse_chart_suggestions(response.text)
             
-            print(f"[DEBUG] AI suggestions received: {ai_suggestions}")
-            
             # Ensure we have exactly 5 suggestions
             if ai_suggestions and len(ai_suggestions) >= 3:
                 # Take first 5 suggestions from AI
@@ -388,14 +341,11 @@ class ChartService:
                             suggestions[key] = value
             else:
                 # Fallback to default suggestions
-                print("[DEBUG] Using default chart suggestions as fallback")
                 suggestions = self._get_default_chart_suggestions(data, language)
             
-            print(f"[DEBUG] Final suggestions: {suggestions}")
             return suggestions
             
         except Exception as e:
-            print(f"[ERROR] Error getting AI suggestions: {str(e)}")
             # Always return default suggestions as fallback
             return self._get_default_chart_suggestions(data, language)
     
@@ -444,10 +394,8 @@ class ChartService:
                 "x_column": "x_column_name",
                 "y_column": "y_column_name",
                 "title": "Chart title (max 6 words)",
-                "xlabel": "X axis label",
-                "ylabel": "Y axis label",
-                "transformation": "Description of any data transformation needed (optional)",
-                "colors": ["#1f77b4", "#ff7f0e", "#2ca02c"]
+                "description": "Brief description of what the chart would show",
+                "transformation": "Description of any data transformation needed (optional)"
             }}
             
             RULES:
@@ -463,10 +411,8 @@ class ChartService:
             """
         
         try:
-            print(f"DEBUG: Sending AI chart config prompt for {chart_type}")
             response = self.model.generate_content(prompt)
             response_text = response.text.strip()
-            print(f"DEBUG: AI chart config response: {response_text}")
             
             # Clean and parse JSON response
             if '```json' in response_text:
@@ -476,7 +422,6 @@ class ChartService:
             
             import json
             chart_config = json.loads(response_text)
-            print(f"DEBUG: Parsed chart config: {chart_config}")
             
             # Validate that required fields exist
             if 'type' not in chart_config:
@@ -493,7 +438,6 @@ class ChartService:
             return chart_config
             
         except Exception as e:
-            print(f"DEBUG: Error getting AI chart config: {e}")
             # Return fallback configuration
             return {
                 'type': chart_type,
@@ -648,11 +592,9 @@ class ChartService:
     
     def _generate_enhanced_chart(self, data: pd.DataFrame, chart_type: str, config: Dict, language: str) -> str:
         """Generate enhanced chart with AI configuration and transformation support."""
-        print(f"DEBUG: Generating enhanced chart - type: {chart_type}, config: {config}")
         
         # Apply transformations if specified
         if 'transformation' in config and config['transformation']:
-            print(f"DEBUG: Applying transformation: {config['transformation']}")
             data = self._apply_data_transformation(data, config)
         
         # Handle standard chart types directly
@@ -690,8 +632,6 @@ class ChartService:
         if not transformation:
             return data
         
-        print(f"DEBUG: Processing transformation: {transformation}")
-        
         # Handle first digit/character extraction
         if any(keyword in transformation for keyword in ['primeiro', 'first', 'dígito', 'digit', 'caractere', 'character']):
             # Find the source column from x_column or detect from transformation description
@@ -705,7 +645,6 @@ class ChartService:
                         break
             
             if source_column and source_column in data.columns:
-                print(f"DEBUG: Extracting first character from column: {source_column}")
                 
                 # Create new column with first character/digit
                 first_char_col = f"first_char_of_{source_column}"
@@ -725,7 +664,6 @@ class ChartService:
                 config['x_column'] = first_char_col
                 config['y_column'] = 'count'
                 
-                print(f"DEBUG: Transformation result - new data shape: {freq_data.shape}")
                 return freq_data
         
         # Handle other transformations as needed
@@ -778,32 +716,17 @@ class ChartService:
         Raises:
             ValueError: If description is invalid or chart cannot be generated
         """
-        print(f"DEBUG: Starting custom chart generation...")
-        print(f"DEBUG: User description: {user_description}")
-        print(f"DEBUG: Language: {language}")
-        print(f"DEBUG: Data shape: {data.shape}")
-        print(f"DEBUG: Data columns: {list(data.columns)}")
-        
         if data is None or data.empty:
-            print("DEBUG: Data is None or empty")
             raise ValueError("Data cannot be None or empty")
         
         if not user_description or not user_description.strip():
-            print("DEBUG: User description is empty")
             raise ValueError("Chart description cannot be empty")
-        
-        print("DEBUG: Input validation passed, calling _interpret_custom_chart_request...")
         
         # Get AI interpretation of the user's request
         chart_config = self._interpret_custom_chart_request(data, user_description, language, conversation_history)
         
-        print(f"DEBUG: Chart config returned: {chart_config}")
-        
         if not chart_config:
-            print("DEBUG: Chart config is None, raising ValueError")
             raise ValueError("Could not interpret chart request")
-        
-        print("DEBUG: Chart config is valid, proceeding with chart generation...")
         
         # Generate the chart based on AI interpretation
         return self._generate_enhanced_chart(data, chart_config['type'], chart_config, language)
@@ -862,7 +785,7 @@ class ChartService:
                 - Para histograma: apenas x_column é necessário
                 - Para gráfico de pizza: apenas x_column (categórica) é necessário
                 - Para scatter/line: x_column e y_column são necessários
-                - Para bar: x_column (categórica) e opcionalmente y_column
+                - Para bar: x_column (categorical) e opcionalmente y_column
                 - Para box: x_column (numérica) é necessário
                 - Para heatmap: use correlações entre colunas numéricas
                 - Se a solicitação mencionar "primeiro dígito", "primeiros caracteres", ou transformações similares, inclua isso no campo "transformation"
@@ -905,7 +828,6 @@ class ChartService:
             print(f"DEBUG: Sending prompt to AI model...")
             response = self.model.generate_content(prompt)
             response_text = response.text.strip()
-            print(f"DEBUG: AI response: {response_text}")
             
             # Clean and parse JSON response
             if '```json' in response_text:
@@ -913,25 +835,16 @@ class ChartService:
             elif '```' in response_text:
                 response_text = response_text.split('```')[1].strip()
             
-            print(f"DEBUG: Cleaned response: {response_text}")
-            
             import json
             chart_config = json.loads(response_text)
-            print(f"DEBUG: Parsed config: {chart_config}")
             
             # Validate the configuration
             if not self._validate_chart_config(chart_config, data):
-                print("DEBUG: Chart config validation failed")
                 return None
             
-            print("DEBUG: Chart config validation passed")
             return chart_config
             
         except Exception as e:
-            print(f"DEBUG: Error interpreting custom chart request: {e}")
-            print(f"DEBUG: Exception type: {type(e)}")
-            import traceback
-            print(f"DEBUG: Traceback: {traceback.format_exc()}")
             return None
     
     def _validate_chart_config(self, config: Dict, data: pd.DataFrame) -> bool:
@@ -946,51 +859,38 @@ class ChartService:
             bool: True if configuration is valid
         """
         try:
-            print(f"DEBUG: Validating chart config: {config}")
-            
             # Check required fields
             if 'type' not in config:
-                print("DEBUG: Validation failed - no 'type' field")
                 return False
             
             chart_type = config['type']
             if chart_type not in ['histogram', 'scatter', 'line', 'bar', 'pie', 'box', 'heatmap']:
-                print(f"DEBUG: Validation failed - unsupported chart type: {chart_type}")
                 return False
             
             # Check if transformation is specified - if so, skip column existence checks
             # as the columns will be created during transformation
             has_transformation = config.get('transformation') and config['transformation'].strip()
-            print(f"DEBUG: Has transformation: {has_transformation}")
             
             if not has_transformation:
                 # Check column existence only if no transformation is specified
                 if 'x_column' in config and config['x_column']:
                     if config['x_column'] not in data.columns:
-                        print(f"DEBUG: Validation failed - x_column '{config['x_column']}' not in data columns: {list(data.columns)}")
                         return False
                 
                 if 'y_column' in config and config['y_column']:
                     if config['y_column'] not in data.columns:
-                        print(f"DEBUG: Validation failed - y_column '{config['y_column']}' not in data columns: {list(data.columns)}")
                         return False
-            else:
-                print("DEBUG: Skipping column existence check due to transformation")
             
             # Type-specific validation
             if chart_type in ['scatter', 'line'] and not (config.get('x_column') and config.get('y_column')):
-                print(f"DEBUG: Validation failed - {chart_type} requires both x_column and y_column")
                 return False
             
             if chart_type in ['histogram', 'pie', 'box'] and not config.get('x_column'):
-                print(f"DEBUG: Validation failed - {chart_type} requires x_column")
                 return False
             
-            print("DEBUG: Chart config validation passed")
             return True
             
         except Exception as e:
-            print(f"DEBUG: Validation exception: {e}")
             return False
     
     def _generate_scatter(self, data: pd.DataFrame, config: Dict, language: str) -> str:
@@ -1060,11 +960,8 @@ class ChartService:
         xlabel = config.get('xlabel', '')
         ylabel = config.get('ylabel', '')
         
-        print(f"DEBUG: Bar chart config - x_column: {x_col}, y_column: {y_col}")
-        
         # If we have both x and y columns specified, use them directly
         if x_col and y_col and x_col in data.columns and y_col in data.columns:
-            print(f"DEBUG: Using specified columns: {x_col}, {y_col}")
             plt.bar(data[x_col], data[y_col])
             
             plt.title(title or f'{y_col} by {x_col}')
@@ -1073,7 +970,6 @@ class ChartService:
             
         # If only x_column is specified, count occurrences
         elif x_col and x_col in data.columns:
-            print(f"DEBUG: Counting occurrences for column: {x_col}")
             grouped_data = data[x_col].value_counts().sort_index()
             plt.bar(grouped_data.index, grouped_data.values)
             
@@ -1083,7 +979,6 @@ class ChartService:
             
         else:
             # Fallback to automatic column selection
-            print("DEBUG: Using automatic column selection")
             categorical_columns = data.select_dtypes(include=['object', 'category']).columns
             numeric_columns = data.select_dtypes(include=['number']).columns
             
